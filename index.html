@@ -781,6 +781,20 @@ body.reduced-effects .shop-streak-fire { animation: none !important; }
     animation: fuwudsTextRun 2.4s linear infinite;
 }
 
+.rarity-impossible {
+    color: transparent;
+    background: repeating-linear-gradient(90deg,
+        #ff183f 0,
+        #ffffff 70px,
+        #850018 140px,
+        #ff183f 210px);
+    background-size: 210px 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: secretTextRun 2.8s linear infinite;
+}
+
 .item.secret-unrevealed .item-info {
     opacity: 0;
     visibility: hidden;
@@ -789,6 +803,128 @@ body.reduced-effects .shop-streak-fire { animation: none !important; }
 .item.fuwuds-unrevealed .item-info {
     opacity: 0;
     visibility: hidden;
+}
+
+.item.bleh-unrevealed { opacity: 0 !important; }
+
+.bleh-reveal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: #000;
+    opacity: 0;
+    transition: opacity .75s ease, background-color 1s linear;
+}
+
+.bleh-reveal.visible { opacity: 1; }
+.bleh-reveal.whiteout { background-color: #fff; }
+
+.bleh-reveal::before,
+.bleh-reveal::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.bleh-reveal::before {
+    background: radial-gradient(circle at center, rgba(255,20,45,.5), transparent 56%);
+}
+
+.bleh-reveal.heartbeat-hit::before { animation: blehHeartbeatFlash .55s cubic-bezier(.12,.78,.2,1); }
+.bleh-reveal.exploding::after { animation: blehExplosionFlash .7s cubic-bezier(.1,.8,.2,1); }
+
+.bleh-words {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2vw, 34px);
+    padding: 24px;
+    font-size: clamp(34px, 7vw, 104px);
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-align: center;
+    transform-origin: 50% 50%;
+}
+
+.bleh-word {
+    display: inline-block;
+    opacity: 0;
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255,255,255,.35);
+    transform-origin: 50% 50%;
+    will-change: transform, opacity, color, filter;
+}
+
+.bleh-word.arriving { animation: blehWordArrive 1.05s cubic-bezier(.16,.86,.24,1) forwards; }
+.bleh-word.final-word.arriving { animation: blehFinalWordArrive 1.05s cubic-bezier(.12,.86,.2,1) forwards, blehFinalWordShake .13s ease-in-out 1.05s infinite; }
+
+.bleh-final-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(48vw, 520px);
+    height: min(48vw, 520px);
+    object-fit: contain;
+    opacity: 0;
+    filter: drop-shadow(0 0 35px rgba(255,20,55,.8));
+    transform-origin: 50% 50%;
+    will-change: transform, opacity, filter;
+}
+
+.bleh-final-image.revealing { animation: blehFinalReveal 4.2s cubic-bezier(.16,.72,.24,1) forwards; }
+
+@keyframes blehHeartbeatFlash {
+    0% { opacity: 0; transform: scale(.72); }
+    14% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.35); }
+}
+
+@keyframes blehExplosionFlash {
+    0% { opacity: 1; background: #fff; transform: scale(1); }
+    18% { opacity: 1; background: radial-gradient(circle at center, #fff 0 12%, #ff2449 35%, transparent 72%); }
+    100% { opacity: 0; transform: scale(1.4); }
+}
+
+@keyframes blehWordArrive {
+    0% { opacity: 0; color: #f00; transform: translate(-18px,9px) rotate(-4deg) scale(1.3); filter: blur(5px); }
+    8% { opacity: 1; transform: translate(15px,-10px) rotate(4deg) scale(1.18); }
+    16% { transform: translate(-13px,7px) rotate(-3deg) scale(1.1); }
+    28% { color: #ff263f; transform: translate(8px,-5px) rotate(2deg) scale(1.04); filter: blur(0); }
+    55% { color: #fff; transform: translate(-2px,1px) rotate(-.4deg) scale(1); }
+    100% { opacity: 1; color: #fff; transform: translate(0,0) rotate(0) scale(1); }
+}
+
+@keyframes blehFinalWordArrive {
+    0% { opacity: 0; color: #f00; transform: translate(-28px,15px) rotate(-7deg) scale(1.45); filter: blur(7px); }
+    10% { opacity: 1; transform: translate(24px,-15px) rotate(6deg) scale(1.3); }
+    22% { transform: translate(-19px,11px) rotate(-5deg) scale(1.2); filter: blur(0); }
+    45% { transform: translate(12px,-8px) rotate(3deg) scale(1.1); }
+    100% { opacity: 1; color: #ff1738; transform: translate(0,0) rotate(0) scale(1); text-shadow: 0 0 22px #f00; }
+}
+
+@keyframes blehFinalWordShake {
+    0% { transform: translate3d(-5px,2px,0) rotate(-1.1deg); }
+    25% { transform: translate3d(2px,-5px,0) rotate(.7deg); }
+    50% { transform: translate3d(6px,3px,0) rotate(1.2deg); }
+    75% { transform: translate3d(-2px,5px,0) rotate(-.5deg); }
+    100% { transform: translate3d(-5px,2px,0) rotate(-1.1deg); }
+}
+
+@keyframes blehFinalReveal {
+    0% { opacity: 0; transform: translate3d(calc(-50% - 24px),calc(-50% + 15px),0) rotate(-5deg) scale(.68); filter: brightness(5) drop-shadow(0 0 90px #fff); }
+    5% { opacity: 1; transform: translate3d(calc(-50% + 21px),calc(-50% - 14px),0) rotate(4.5deg) scale(1.16); }
+    11% { transform: translate3d(calc(-50% - 17px),calc(-50% + 11px),0) rotate(-3.5deg) scale(1.09); }
+    19% { transform: translate3d(calc(-50% + 13px),calc(-50% - 8px),0) rotate(2.6deg) scale(1.055); filter: brightness(1.25) drop-shadow(0 0 42px rgba(255,20,55,.9)); }
+    31% { transform: translate3d(calc(-50% - 9px),calc(-50% + 6px),0) rotate(-1.8deg) scale(1.03); }
+    45% { opacity: 1; transform: translate3d(calc(-50% + 6px),calc(-50% - 4px),0) rotate(1.1deg) scale(1.015); }
+    61% { transform: translate3d(calc(-50% - 3px),calc(-50% + 2px),0) rotate(-.55deg) scale(1.006); }
+    78% { opacity: 1; transform: translate3d(calc(-50% + 1px),calc(-50% - 1px),0) rotate(.18deg) scale(1); }
+    100% { opacity: 0; transform: translate3d(-50%,-50%,0) rotate(0) scale(.94); filter: brightness(.85) drop-shadow(0 0 12px rgba(255,20,55,.2)); }
 }
 
 .fuwuds-pop-item {
@@ -1556,6 +1692,24 @@ body.reduced-effects .shop-streak-fire { animation: none !important; }
     color: #9ed8ff;
 }
 
+.probability-key-section {
+    grid-column: 1 / -1;
+    padding: 13px 12px 14px;
+    background: #171a1c;
+    border: 1px solid #34434c;
+}
+
+.probability-key-title {
+    margin-bottom: 9px;
+    color: #fff;
+    font-size: 12px;
+}
+
+.probability-key-section .probability-item {
+    width: min(160px, 100%);
+    margin: 0 auto;
+}
+
 .probability-variants {
     grid-column: 1 / -1;
     margin-top: 7px;
@@ -2007,6 +2161,9 @@ const ITEMS = [
     { name: "powocakes", rarity: "fuwuds", weight: 0.070, value: 1575000, image: "assets/mysteryfruit.png", revealImage: "items/powocakes.png", nameColours: ["#ffe990", "#d98b26"] },
     { name: "powoptart", rarity: "fuwuds", weight: 0.065, value: 1800000, image: "assets/mysteryfruit.png", revealImage: "items/powoptart.png", nameColours: ["#ff9fd2", "#ff4f91"] },
 
+    // IMPOSSIBLE — exactly 1 in 500,000,000 per cardboard-box item
+    { name: "bleh", rarity: "impossible", weight: 0, exactChance: 1 / 500000000, value: 10000000000, image: "items/bleh.png", pool: "cardboardbox" },
+
     // LARP BOX EXCLUSIVES (grand ranking, rarest to least rare)
     { name: "c", rarity: "secret", weight: 0.12, value: 7000000, image: "logo-items/c.png", pool: "larpbox" },
     { name: "nzwo", rarity: "secret", weight: 0.12, value: 7000000, image: "logo-items/nzwo.png", pool: "larpbox" },
@@ -2294,7 +2451,8 @@ const RARITY_SORT_ORDER = {
     mythic: 5,
     secret: 6,
     fuwuds: 7,
-    eternal: 8
+    impossible: 8,
+    eternal: 9
 };
 
 function sortByRarity(entries, getItem = entry => entry) {
@@ -2821,6 +2979,10 @@ const completeSound = new Audio("sounds/boxcomplete.wav");
 const moneySound = new Audio("sounds/money.wav");
 const glassSound = new Audio("sounds/glass.wav");
 const toySound = new Audio("sounds/toy.wav");
+const ominousSound = new Audio("sounds/ominous.wav");
+const heartbeatSound = new Audio("sounds/heartbeat.wav");
+const riserSound = new Audio("sounds/riser.wav");
+const explosionSound = new Audio("sounds/explosion.wav");
 
 let shadowRevealQueue = Promise.resolve();
 
@@ -2949,10 +3111,12 @@ function rollBoxModifier() {
 
 function getItemWeights(luck = 1, boxType = null) {
     const itemPool = boxType === "megabox"
-        ? ITEMS
+        ? ITEMS.filter(item => item.pool !== "cardboardbox")
         : boxType === "larpbox"
             ? ITEMS.filter(item => item.pool === "larpbox")
             : ITEMS.filter(item => !item.pool);
+
+    let weightedItems;
 
     // Early boxes keep their original gentle curve. Beyond supply-crate luck,
     // rarity weights scale meaningfully so expensive boxes are real upgrades.
@@ -2968,27 +3132,41 @@ function getItemWeights(luck = 1, boxType = null) {
             fuwuds: 1.60
         };
 
-        return itemPool.map(item => ({
+        weightedItems = itemPool.map(item => ({
             item,
             weight: item.weight * Math.pow(luck, advancedLuckPower[item.rarity] || 0)
         }));
+    } else {
+        const rarityLuck = {
+            common: 0,
+            uncommon: .08,
+            rare: .18,
+            epic: .32,
+            legendary: .50,
+            mythic: .70,
+            secret: .85,
+            fuwuds: .85
+        };
+        const luckStrength = Math.log2(Math.max(1, luck));
+        weightedItems = itemPool.map(item => ({
+            item,
+            weight: item.weight * (1 + luckStrength * (rarityLuck[item.rarity] || 0))
+        }));
     }
 
-    const rarityLuck = {
-        common: 0,
-        uncommon: .08,
-        rare: .18,
-        epic: .32,
-        legendary: .50,
-        mythic: .70,
-        secret: .85,
-        fuwuds: .85
-    };
-    const luckStrength = Math.log2(Math.max(1, luck));
-    return itemPool.map(item => ({
-        item,
-        weight: item.weight * (1 + luckStrength * (rarityLuck[item.rarity] || 0))
-    }));
+    // Cardboard-exclusive exact rolls are derived from the completed regular
+    // pool, so streak luck and Lucky modifiers never alter their stated odds.
+    if (boxType === "cardboardbox") {
+        const regularTotal = weightedItems.reduce((sum, entry) => sum + entry.weight, 0);
+        for (const item of ITEMS.filter(entry => entry.pool === "cardboardbox" && entry.exactChance > 0)) {
+            weightedItems.push({
+                item,
+                weight: regularTotal * item.exactChance / (1 - item.exactChance)
+            });
+        }
+    }
+
+    return weightedItems;
 }
 
 function weightedItem(luck = 1, boxType = null) {
@@ -3082,6 +3260,83 @@ async function getSoundDuration(sound, fallbackSeconds = 6) {
     return Number.isFinite(sound.duration) && sound.duration > 0
         ? sound.duration
         : fallbackSeconds;
+}
+
+function playTrackedSound(sound, volume = 1) {
+    if (appSettings.muteSounds || appSettings.soundVolume <= 0) return null;
+    const clone = sound.cloneNode(true);
+    clone.volume = Math.min(1, volume * appSettings.soundVolume);
+    clone.play().catch(() => {});
+    return clone;
+}
+
+function queueBlehReveal(itemElement, revealSource) {
+    const runReveal = async () => {
+        if (!itemElement.isConnected) return;
+
+        musicSound.pause();
+
+        const overlay = document.createElement("div");
+        overlay.className = "bleh-reveal";
+        const words = document.createElement("div");
+        words.className = "bleh-words";
+        const wordTexts = ["WHAT...", "THE....", "FUCK?!"];
+        const wordElements = wordTexts.map((text, index) => {
+            const word = document.createElement("span");
+            word.className = `bleh-word${index === wordTexts.length - 1 ? " final-word" : ""}`;
+            word.textContent = text;
+            words.appendChild(word);
+            return word;
+        });
+        const finalImage = document.createElement("img");
+        finalImage.className = "bleh-final-image";
+        finalImage.src = revealSource;
+        finalImage.alt = "bleh";
+        overlay.append(words, finalImage);
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => overlay.classList.add("visible"));
+        await wait(780);
+        const ominous = playTrackedSound(ominousSound, .9);
+
+        for (const word of wordElements) {
+            playSound(heartbeatSound, .95, random(.96, 1.04));
+            overlay.classList.remove("heartbeat-hit");
+            void overlay.offsetWidth;
+            overlay.classList.add("heartbeat-hit");
+            word.classList.add("arriving");
+            await wait(1120);
+        }
+
+        await wait(850);
+        words.style.transition = "opacity .55s ease";
+        words.style.opacity = "0";
+
+        const riserDuration = await getSoundDuration(riserSound, 5);
+        playTrackedSound(riserSound, .95);
+        overlay.style.transition = `background-color ${riserDuration}s linear`;
+        requestAnimationFrame(() => overlay.classList.add("whiteout"));
+        await wait(riserDuration * 1000);
+        ominous?.pause();
+
+        playSound(explosionSound, 1, 1);
+        overlay.style.transition = "background-color .14s linear, opacity .75s ease";
+        overlay.classList.remove("whiteout");
+        overlay.classList.add("exploding");
+        finalImage.classList.add("revealing");
+        await wait(4200);
+
+        overlay.classList.remove("visible");
+        await wait(760);
+        overlay.remove();
+        itemElement.remove();
+        activeItems = activeItems.filter(entry => entry.element !== itemElement);
+        syncMusicSettings();
+    };
+
+    const queued = shadowRevealQueue.then(runReveal, runReveal);
+    shadowRevealQueue = queued.catch(() => {});
+    return queued;
 }
 
 function queueShadowRevealCutscene(itemImage, revealSource) {
@@ -3398,7 +3653,8 @@ function formatProbability(percent) {
     if (percent >= 10) return `${percent.toFixed(1)}%`;
     if (percent >= 1) return `${percent.toFixed(2)}%`;
     if (percent >= .1) return `${percent.toFixed(3)}%`;
-    return `${percent.toFixed(4)}%`;
+    if (percent >= .0001) return `${percent.toFixed(4)}%`;
+    return `${percent.toFixed(8).replace(/0+$/, "").replace(/\.$/, "")}%`;
 }
 
 function closeProbabilityModal() {
@@ -3478,6 +3734,11 @@ function openProbabilityModal(button, entry) {
 
     const keyChance = ETERNAL_KEY_CHANCES[boxType] || 0;
     if (keyChance > 0) {
+        const keySection = document.createElement("section");
+        keySection.className = "probability-key-section";
+        const keyTitle = document.createElement("div");
+        keyTitle.className = "probability-key-title";
+        keyTitle.textContent = "eternal key chance";
         const card = document.createElement("div");
         card.className = "probability-item bonus";
 
@@ -3489,13 +3750,14 @@ function openProbabilityModal(button, entry) {
 
         const name = document.createElement("div");
         name.className = "probability-item-name rarity-eternal";
-        name.textContent = "eternal key • per box";
+        name.textContent = "eternal key";
 
         const chance = document.createElement("div");
         chance.className = "probability-item-chance";
-        chance.textContent = formatProbability(keyChance * 100);
+        chance.textContent = `${formatProbability(keyChance * 100)} per box`;
         card.append(image, name, chance);
-        grid.appendChild(card);
+        keySection.append(keyTitle, card);
+        grid.appendChild(keySection);
     }
 
     const variantWeights = getVariantWeights(variantMult, 2 / 3, boxType);
@@ -3916,7 +4178,9 @@ function spawnRewards() {
     Promise.all(rewardPromises).then(async () => {
         // Every item lands first; mysteries then reveal one at a time.
         for (const mystery of pendingSecretReveals) {
-            if (mystery.type === "fuwuds") {
+            if (mystery.type === "bleh") {
+                await queueBlehReveal(mystery.element, mystery.revealSource);
+            } else if (mystery.type === "fuwuds") {
                 await queueFuwudsReveal(mystery.image, mystery.revealSource);
             } else {
                 await queueShadowReveal(mystery.image, mystery.revealSource);
@@ -3937,7 +4201,9 @@ function spawnItem(targetX, targetY, sourceX, sourceY, itemData, variant, setMul
     const item = document.createElement("div");
     item.className = "item revealing";
 
-    if (itemData.rarity === "secret" && itemData.revealImage) {
+    if (itemData.rarity === "impossible") {
+        item.classList.add("bleh-unrevealed");
+    } else if (itemData.rarity === "secret" && itemData.revealImage) {
         item.classList.add("secret-unrevealed");
     } else if (itemData.rarity === "fuwuds" && itemData.revealImage) {
         item.classList.add("fuwuds-unrevealed");
@@ -4023,6 +4289,16 @@ function spawnItem(targetX, targetY, sourceX, sourceY, itemData, variant, setMul
             if (isEternalKey) {
                 eternalKeys += 1;
                 updateEternalKeysDisplay();
+            } else if (itemData.rarity === "impossible") {
+                pendingSecretReveals.push({
+                    type: "bleh",
+                    element: item,
+                    image,
+                    revealSource: itemData.image,
+                    reward: finalReward,
+                    x: targetX + 54,
+                    y: targetY + 5
+                });
             } else if (itemData.rarity === "secret" && itemData.revealImage) {
                 pendingSecretReveals.push({
                     type: "secret",
