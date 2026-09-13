@@ -462,6 +462,25 @@ body.reduced-effects .shelf-display-item {
     z-index: 1;
 }
 
+.box-modifier-label {
+    position: absolute;
+    top: calc(100% - 5px);
+    left: 50%;
+    width: max-content;
+    max-width: 220px;
+    transform: translateX(-50%);
+    font-size: 20px;
+    line-height: 1;
+    text-align: center;
+    text-shadow: 0 3px 8px #000, 0 1px 2px #000;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.box.modifier-speedy.entering { animation-duration: .40s; }
+.box.modifier-speedy.shaking { animation-duration: .25s; }
+.box.modifier-speedy.opening { animation-duration: .10s; }
+
 /* Box Variant Filter Effects */
 .box.gold img {
     filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.95)) sepia(1) hue-rotate(5deg) saturate(6) brightness(1.15);
@@ -2019,6 +2038,15 @@ const VARIANTS = [
     { name: "ozone", chance: 0.005, multiplier: 25, boxOnly: "larpbox" }
 ];
 
+const BOX_MODIFIER_CHANCE = .08;
+const BOX_MODIFIERS = [
+    { name: "speedy", rarity: "common", weight: 52, animationSpeed: .48 },
+    { name: "overstuffed", rarity: "uncommon", weight: 28, itemMultiplier: 1.5 },
+    { name: "lucky", rarity: "rare", weight: 13, luckMultiplier: 2 },
+    { name: "polished", rarity: "epic", weight: 6, variantMultiplier: 3 },
+    { name: "echoing", rarity: "legendary", weight: 1, echoCount: 1 }
+];
+
 const SHELF_SKINS = [
     { id: "shelf", name: "shelf", price: 0, incomeBonus: 0, image: "shelves/shelf.png", slotOffset: 0 },
     { id: "workshop", name: "workshop", price: 25000, incomeBonus: .05, image: "shelves/workshop.png", slotOffset: 2 },
@@ -2747,6 +2775,8 @@ let currentVariantMult = 1;
 let currentMinItems = 1;
 let currentMaxItems = 3;
 let currentBoxVariant = null;
+let currentBoxModifier = null;
+let currentAnimationSpeed = 1;
 
 let mouseX = 0;
 let mouseY = 0;
@@ -2874,6 +2904,17 @@ document.addEventListener("pointerdown", startMusic, { once: true });
 
 function random(min, max) { return Math.random() * (max - min) + min; }
 function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
+
+function rollBoxModifier() {
+    if (Math.random() >= BOX_MODIFIER_CHANCE) return null;
+    const totalWeight = BOX_MODIFIERS.reduce((sum, modifier) => sum + modifier.weight, 0);
+    let roll = Math.random() * totalWeight;
+    for (const modifier of BOX_MODIFIERS) {
+        roll -= modifier.weight;
+        if (roll <= 0) return modifier;
+    }
+    return BOX_MODIFIERS[0];
+}
 
 /* ==================================================
    rolls & utils
@@ -3560,8 +3601,10 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
     clearing = false;
     isEntering = true;
     currentBoxType = boxType;
-    currentLuck = luck;
-    currentVariantMult = variantMult;
+    currentBoxModifier = rollBoxModifier();
+    currentAnimationSpeed = currentBoxModifier?.animationSpeed || 1;
+    currentLuck = luck * (currentBoxModifier?.luckMultiplier || 1);
+    currentVariantMult = variantMult * (currentBoxModifier?.variantMultiplier || 1);
     currentMinItems = minItems;
     currentMaxItems = maxItems;
 
@@ -3572,6 +3615,14 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
 
     const box = document.createElement("div");
     box.className = "box entering";
+
+    if (currentBoxModifier) {
+        box.classList.add(`modifier-${currentBoxModifier.name}`);
+        const modifierLabel = document.createElement("div");
+        modifierLabel.className = `box-modifier-label rarity-${currentBoxModifier.rarity}`;
+        modifierLabel.textContent = currentBoxModifier.name;
+        box.appendChild(modifierLabel);
+    }
 
     if (currentBoxVariant.name !== "normal") {
         box.classList.add(currentBoxVariant.name);
@@ -3592,7 +3643,7 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
     playSound(wooshSound, .25, random(.94, 1.04));
     setTimeout(() => {
         isEntering = false;
-    }, 820);
+    }, 820 * currentAnimationSpeed);
 }
 
 function openBox() {
@@ -3614,8 +3665,8 @@ function openBox() {
         image.src = `boxes/${currentBoxType}/boxopened.png`;
         activeBox.style.setProperty("--rainbow-mask", `url("${image.src}")`);
         activeBox.classList.add("opening");
-        setTimeout(spawnRewards, 130);
-    }, 520);
+        setTimeout(spawnRewards, 130 * currentAnimationSpeed);
+    }, 520 * currentAnimationSpeed);
 }
 
 function getRewardPositions(count, boxCenterX, boxTop) {
@@ -3670,12 +3721,14 @@ function spawnRewards() {
     }
     isRewardAnimation = true;
 
-    const itemAmount = randomInt(currentMinItems, currentMaxItems);
+    const baseItemAmount = randomInt(currentMinItems, currentMaxItems);
+    const itemAmount = Math.max(1, Math.ceil(baseItemAmount * (currentBoxModifier?.itemMultiplier || 1)));
+    const echoCount = currentBoxModifier?.echoCount || 0;
     const gotEternalKey = Math.random() < (ETERNAL_KEY_CHANCES[currentBoxType] || 0);
     statistics.boxesOpened += 1;
-    statistics.itemsPulled += itemAmount;
+    statistics.itemsPulled += itemAmount + echoCount;
     if (gotEternalKey) statistics.keysFound += 1;
-    const amount = itemAmount + (gotEternalKey ? 1 : 0);
+    const amount = itemAmount + echoCount + (gotEternalKey ? 1 : 0);
     const stageRect = stage.getBoundingClientRect();
     const boxRect = activeBox.getBoundingClientRect();
     const boxLeft = boxRect.left - stageRect.left;
@@ -3728,6 +3781,17 @@ function spawnRewards() {
             pos: null,
             isEternalKey: false
         });
+    }
+
+    for (let i = 0; i < echoCount && rolled.length > 0; i++) {
+        const echoed = rolled[randomInt(0, rolled.length - 1)];
+        rolled.push({
+            itemData: echoed.itemData,
+            variant: echoed.variant,
+            pos: null,
+            isEternalKey: false
+        });
+        if (echoed.variant.name !== "normal") statistics.variantsPulled += 1;
     }
     saveStatistics();
 
@@ -3783,7 +3847,7 @@ function spawnRewards() {
             const mouthY = boxTop + appliedCompositionShift + boxRect.height * .30 - 54;
             spawnItem(r.pos.x, r.pos.y + appliedCompositionShift, mouthX, mouthY, r.itemData, r.variant, setMultiplier, badgeAsset, r.isEternalKey, pendingSecretReveals)
                 .then(resolve);
-        }, i * 135);
+        }, i * 135 * currentAnimationSpeed);
     }));
 
     const normalizedQuality = Math.min(1, Math.log10(Math.max(10, maxValueInBox)) / 5);
@@ -3878,7 +3942,7 @@ function spawnItem(targetX, targetY, sourceX, sourceY, itemData, variant, setMul
             transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)"
         }
     ], {
-        duration: 650,
+        duration: 650 * currentAnimationSpeed,
         easing: "cubic-bezier(.18,.78,.22,1)",
         fill: "forwards"
     });
