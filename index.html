@@ -1536,6 +1536,12 @@ body.reduced-effects .shelf-display-item {
     text-transform: lowercase;
 }
 
+.probability-variants-note {
+    margin: -2px 0 9px;
+    color: #fff;
+    font-size: 12px;
+}
+
 .probability-variants-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
@@ -2929,7 +2935,11 @@ function weightedItem(luck = 1, boxType = null) {
 }
 
 function getVariantsForBox(boxType = null) {
-    return VARIANTS.filter(variant => !variant.boxOnly || variant.boxOnly === boxType);
+    return VARIANTS.filter(variant =>
+        !variant.boxOnly ||
+        variant.boxOnly === boxType ||
+        (boxType === "megabox" && variant.name === "ozone")
+    );
 }
 
 function rollVariant(variantMult = 1, scaleChance = 1, boxType = null) {
@@ -3432,6 +3442,15 @@ function openProbabilityModal(button, entry) {
     const variantsList = document.createElement("div");
     variantsList.className = "probability-variants-list";
 
+    if (boxType === "megabox") {
+        const variantsNote = document.createElement("div");
+        variantsNote.className = "probability-variants-note";
+        variantsNote.textContent = "ozone only applies to larp items";
+        variantsSection.append(variantsTitle, variantsNote);
+    } else {
+        variantsSection.appendChild(variantsTitle);
+    }
+
     for (const entry of variantWeights) {
         const variant = document.createElement("div");
         variant.className = "probability-variant";
@@ -3447,7 +3466,7 @@ function openProbabilityModal(button, entry) {
         variantsList.appendChild(variant);
     }
 
-    variantsSection.append(variantsTitle, variantsList);
+    variantsSection.appendChild(variantsList);
     grid.appendChild(variantsSection);
 
     modal.append(header, grid);
@@ -3681,7 +3700,21 @@ function spawnRewards() {
 
     for (let i = 0; i < itemAmount; i++) {
         const itemData = weightedItem(currentLuck, currentBoxType);
-        const variant = isBoxVariantLocked ? currentBoxVariant : rollVariant(currentVariantMult, 1, currentBoxType);
+        let variant;
+        if (currentBoxType === "megabox" && currentBoxVariant?.name === "ozone") {
+            // Ozone may decorate the Mega Box, but it can only be awarded to
+            // rewards from the exclusive LARP pool.
+            variant = itemData.pool === "larpbox"
+                ? currentBoxVariant
+                : rollVariant(currentVariantMult, 1, null);
+        } else if (isBoxVariantLocked) {
+            variant = currentBoxVariant;
+        } else {
+            const variantPool = currentBoxType === "megabox" && itemData.pool !== "larpbox"
+                ? null
+                : currentBoxType;
+            variant = rollVariant(currentVariantMult, 1, variantPool);
+        }
         if (variant.name !== "normal") statistics.variantsPulled += 1;
         recordPullStatistics(itemData, variant);
         const totalVal = Math.round(itemData.value * variant.multiplier);
