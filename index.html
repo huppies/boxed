@@ -388,6 +388,18 @@ button {
 .stat-label { color: #91877c; font-size: 11px; }
 .stat-value { margin-top: 3px; color: #eee8dd; font-size: 19px; overflow-wrap: anywhere; }
 .stat-detail { margin-top: 3px; color: #58c98d; font-size: 12px; }
+.collection-progress {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #302b27;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #91877c;
+    font-size: 13px;
+}
+.collection-progress strong { color: #58c98d; font-size: 17px; font-weight: 400; }
 
 .utility-close,
 .shelf-picker-close,
@@ -1218,7 +1230,7 @@ body.reduced-effects .shelf-display-item {
     max-height: min(720px, 86dvh);
     padding: 18px;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     background: #171512;
     border: 1px solid #39332e;
     box-shadow: 0 24px 70px rgba(0,0,0,.55);
@@ -1234,6 +1246,17 @@ body.reduced-effects .shelf-display-item {
 }
 
 .shelf-picker-title { color: #eee8dd; font-size: 20px; }
+.shelf-equip-best {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border: 1px solid #493d34;
+    background: #27211c;
+    color: #eee8dd;
+    font: inherit;
+    cursor: pointer;
+}
+.shelf-equip-best:hover:not(:disabled) { background: #332921; border-color: #6a5141; }
+.shelf-equip-best:disabled { opacity: .4; cursor: not-allowed; }
 .shelf-picker-close {
     width: 30px;
     height: 30px;
@@ -1829,6 +1852,7 @@ body.reduced-effects .shelf-display-item {
             <div class="stat-card"><img class="stat-icon" src="assets/statdiscovered.png" alt=""><div class="stat-label">items discovered</div><div id="stat-discovered" class="stat-value">0</div></div>
             <div class="stat-card wide"><img class="stat-icon" src="assets/statrarest.png" alt=""><div class="stat-label">rarest pull</div><div id="stat-rarest" class="stat-value">none yet</div><div id="stat-rarest-odds" class="stat-detail">open a box to start tracking</div></div>
         </div>
+        <div class="collection-progress"><span>collection progress</span><strong id="stat-progress">0%</strong></div>
     </section>
 </div>
 
@@ -2041,6 +2065,9 @@ function updateStatisticsDisplay() {
     document.getElementById("stat-variants").textContent = statistics.variantsPulled.toLocaleString();
     document.getElementById("stat-keys").textContent = statistics.keysFound.toLocaleString();
     document.getElementById("stat-discovered").textContent = discoveredItems.size.toLocaleString();
+    const discoveredCount = Math.min(discoveredItems.size, ITEMS.length);
+    const progress = ITEMS.length ? (discoveredCount / ITEMS.length) * 100 : 0;
+    document.getElementById("stat-progress").textContent = `${progress === 100 ? "100" : progress.toFixed(1)}%`;
 
     const rarest = statistics.rarestPull;
     document.getElementById("stat-rarest").textContent = rarest?.name || "none yet";
@@ -2344,6 +2371,26 @@ function placeShelfItem(slotIndex, item, variant) {
     renderDisplayShelf();
 }
 
+function equipBestShelfItems() {
+    const bestItems = ITEMS
+        .filter(item => discoveredItems.has(item.name))
+        .map(item => {
+            const ownedVariants = getOwnedVariants(item);
+            const variant = ownedVariants.reduce((best, current) =>
+                current.multiplier > best.multiplier ? current : best,
+            ownedVariants[0] || VARIANTS[0]);
+            return { name: item.name, variant: variant.name, value: item.value * variant.multiplier };
+        })
+        .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name))
+        .slice(0, 5)
+        .map(({ name, variant }) => ({ name, variant }));
+
+    displayedShelfItems = Array.from({ length: 5 }, (_, index) => bestItems[index] || null);
+    saveDisplayShelf();
+    closeShelfPicker();
+    renderDisplayShelf();
+}
+
 function openVariantPicker(slotIndex, item) {
     closeVariantPicker();
     const ownedVariants = getOwnedVariants(item);
@@ -2473,6 +2520,13 @@ function openShelfPicker(slotIndex) {
     close.addEventListener("click", closeShelfPicker);
     header.append(title, close);
 
+    const equipBest = document.createElement("button");
+    equipBest.className = "shelf-equip-best";
+    equipBest.type = "button";
+    equipBest.textContent = "equip best";
+    equipBest.disabled = !ITEMS.some(item => discoveredItems.has(item.name));
+    equipBest.addEventListener("click", equipBestShelfItems);
+
     const grid = document.createElement("div");
     grid.className = "shelf-picker-grid";
     const available = sortByRarity(ITEMS.filter(item => discoveredItems.has(item.name)));
@@ -2510,7 +2564,7 @@ function openShelfPicker(slotIndex) {
         }
     }
 
-    picker.append(header, grid);
+    picker.append(header, equipBest, grid);
     backdrop.appendChild(picker);
     backdrop.addEventListener("pointerdown", event => {
         if (event.target === backdrop) closeShelfPicker();
