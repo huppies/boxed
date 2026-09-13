@@ -166,6 +166,24 @@ button {
     transform: translateY(0) scale(.98);
 }
 
+.shop-streak-fire {
+    position: absolute;
+    left: 1px;
+    top: 2px;
+    width: 74px;
+    height: 74px;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(0 0 8px rgba(255,108,31,.55));
+    animation: shopStreakFire 1.1s steps(3, end) infinite;
+}
+
+@keyframes shopStreakFire {
+    0%, 100% { transform: translateY(0) scale(1); opacity: .9; }
+    50% { transform: translateY(-2px) scale(1.04); opacity: 1; }
+}
+
 .shop-entry-info {
     margin-left: 65px;
     max-width: 120px;
@@ -424,6 +442,8 @@ body.reduced-effects .shelf-display-item {
     animation: none !important;
 }
 
+body.reduced-effects .shop-streak-fire { animation: none !important; }
+
 /* ==================================================
    stage
 ================================================== */
@@ -477,10 +497,6 @@ body.reduced-effects .shelf-display-item {
     z-index: 4;
 }
 
-.box.modifier-speedy.entering { animation-duration: .40s; }
-.box.modifier-speedy.shaking { animation-duration: .25s; }
-.box.modifier-speedy.opening { animation-duration: .10s; }
-
 /* Box Variant Filter Effects */
 .box.gold img {
     filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.95)) sepia(1) hue-rotate(5deg) saturate(6) brightness(1.15);
@@ -496,15 +512,15 @@ body.reduced-effects .shelf-display-item {
 }
 
 .box.entering {
-    animation: boxEnter .82s cubic-bezier(.16,.82,.24,1) forwards;
+    animation: boxEnter var(--box-enter-duration, .82s) cubic-bezier(.16,.82,.24,1) forwards;
 }
 
 .box.shaking {
-    animation: boxShake .52s cubic-bezier(.4,.05,.6,.95);
+    animation: boxShake var(--box-shake-duration, .52s) cubic-bezier(.4,.05,.6,.95);
 }
 
 .box.opening {
-    animation: boxOpen .2s cubic-bezier(.2,.8,.2,1) forwards;
+    animation: boxOpen var(--box-open-duration, .2s) cubic-bezier(.2,.8,.2,1) forwards;
 }
 
 .box.clearing {
@@ -1648,6 +1664,7 @@ body.reduced-effects .shelf-display-item {
     .shop-title { font-size: 20px; }
     .shop-entry { min-height: 75px; padding-right: 60px; }
     .shop-box-preview { width: 52px; height: 52px; top: 11px; }
+    .shop-streak-fire { left: 0; top: 2px; width: 62px; height: 62px; }
     .shop-entry-info { margin-left: 55px; max-width: 75px; }
     .shop-name { font-size: 12px; }
     .shop-buy { width: 52px; height: 28px; right: 7px; font-size: 11px; }
@@ -2047,6 +2064,9 @@ const BOX_MODIFIERS = [
     { name: "echoing", rarity: "legendary", weight: 1, echoCount: 1 }
 ];
 
+const BOX_STREAK_FIRE_THRESHOLD = 50;
+const BOX_STREAK_CAP = 100;
+
 const SHELF_SKINS = [
     { id: "shelf", name: "shelf", price: 0, incomeBonus: 0, image: "shelves/shelf.png", slotOffset: 0 },
     { id: "workshop", name: "workshop", price: 25000, incomeBonus: .05, image: "shelves/workshop.png", slotOffset: 2 },
@@ -2070,6 +2090,13 @@ const shelfIncomeEl = document.getElementById("shelf-income");
 
 let balance = Number(localStorage.getItem("boxed_balance")) || 0;
 let eternalKeys = Number(localStorage.getItem("boxed_eternal_keys")) || 0;
+let boxOpeningStreak = { boxType: null, count: 0 };
+try {
+    const savedStreak = JSON.parse(localStorage.getItem("boxed_box_streak"));
+    if (savedStreak?.boxType && Number.isFinite(savedStreak.count)) {
+        boxOpeningStreak = { boxType: savedStreak.boxType, count: Math.max(0, savedStreak.count) };
+    }
+} catch (_) {}
 let discoveredItems;
 let discoveredVariants;
 let displayedShelfItems;
@@ -3548,6 +3575,33 @@ function updateShopButtonsState() {
     });
 }
 
+function updateShopStreakIndicator() {
+    document.querySelectorAll(".shop-streak-fire").forEach(fire => fire.remove());
+    if (boxOpeningStreak.count < BOX_STREAK_FIRE_THRESHOLD) return;
+
+    const button = document.querySelector(`.shop-buy[data-box="${boxOpeningStreak.boxType}"]`);
+    const entry = button?.closest(".shop-entry");
+    if (!entry) return;
+
+    const fire = document.createElement("img");
+    fire.className = "shop-streak-fire";
+    fire.src = "assets/fire.png";
+    fire.alt = "";
+    fire.title = `${boxOpeningStreak.count.toLocaleString()} open streak`;
+    entry.appendChild(fire);
+}
+
+function advanceBoxOpeningStreak(boxType) {
+    boxOpeningStreak = boxOpeningStreak.boxType === boxType
+        ? { boxType, count: boxOpeningStreak.count + 1 }
+        : { boxType, count: 1 };
+    localStorage.setItem("boxed_box_streak", JSON.stringify(boxOpeningStreak));
+    updateShopStreakIndicator();
+    return Math.min(boxOpeningStreak.count, BOX_STREAK_CAP);
+}
+
+updateShopStreakIndicator();
+
 function purchaseAndSpawn(boxType, price, keyPrice, luck, variantMult, minItems, maxItems) {
     const canBuyNow = !activeBox || nextPrompt.classList.contains("visible");
     if (!canBuyNow) return;
@@ -3601,9 +3655,12 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
     clearing = false;
     isEntering = true;
     currentBoxType = boxType;
+    const streakStrength = advanceBoxOpeningStreak(boxType);
+    const streakLuckMultiplier = 1 + streakStrength * .0025;
+    const streakAnimationMultiplier = 1 - streakStrength * .003;
     currentBoxModifier = rollBoxModifier();
-    currentAnimationSpeed = currentBoxModifier?.animationSpeed || 1;
-    currentLuck = luck * (currentBoxModifier?.luckMultiplier || 1);
+    currentAnimationSpeed = (currentBoxModifier?.animationSpeed || 1) * streakAnimationMultiplier;
+    currentLuck = luck * (currentBoxModifier?.luckMultiplier || 1) * streakLuckMultiplier;
     currentVariantMult = variantMult * (currentBoxModifier?.variantMultiplier || 1);
     currentMinItems = minItems;
     currentMaxItems = maxItems;
@@ -3615,6 +3672,9 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
 
     const box = document.createElement("div");
     box.className = "box entering";
+    box.style.setProperty("--box-enter-duration", `${820 * currentAnimationSpeed}ms`);
+    box.style.setProperty("--box-shake-duration", `${520 * currentAnimationSpeed}ms`);
+    box.style.setProperty("--box-open-duration", `${200 * currentAnimationSpeed}ms`);
 
     if (currentBoxModifier) {
         box.classList.add(`modifier-${currentBoxModifier.name}`);
