@@ -1,0 +1,3969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>boxed</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    overflow: hidden;
+    background: #151311;
+    color: #eee8dd;
+    font-family: "Comic Neue";
+    font-weight: 700;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+button {
+    font: inherit;
+}
+
+/* ==================================================
+   layout
+================================================== */
+
+#game {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ==================================================
+   shop
+================================================== */
+
+#shop {
+    width: 270px;
+    min-width: 270px;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    min-height: 0;
+    padding: 25px 14px 17px;
+    background: #121110;
+    border-right: 1px solid #302b27;
+    box-shadow: 5px 0 18px rgba(0, 0, 0, .16);
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
+    position: relative;
+    z-index: 20;
+}
+
+.shop-title {
+    margin: 0 0 11px 2px;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.shop-line {
+    width: 100%;
+    height: 1px;
+    margin-bottom: 14px;
+    background: #713025;
+}
+
+.shop-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.shop-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.shop-list,
+.probability-grid {
+    scrollbar-width: thin;
+    scrollbar-color: #713025 #1a1714;
+}
+
+.shop-list::-webkit-scrollbar,
+.probability-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.shop-list::-webkit-scrollbar-track,
+.probability-grid::-webkit-scrollbar-track {
+    background: #1a1714;
+}
+
+.shop-list::-webkit-scrollbar-thumb,
+.probability-grid::-webkit-scrollbar-thumb {
+    min-height: 34px;
+    background: #713025;
+    border: 2px solid #1a1714;
+}
+
+.shop-list::-webkit-scrollbar-thumb:hover,
+.probability-grid::-webkit-scrollbar-thumb:hover {
+    background: #934033;
+}
+
+.shop-entry {
+    position: relative;
+    min-height: 86px;
+    padding: 10px;
+    padding-right: 75px;
+    border-top: 1px solid #292522;
+    border-bottom: 1px solid #211f1c;
+    display: flex;
+    align-items: center;
+    transition: background .18s ease, padding-left .18s ease;
+}
+
+.shop-entry:hover {
+    background: #171512;
+    padding-left: 12px;
+}
+
+.shop-box-preview {
+    position: absolute;
+    left: 7px;
+    top: 12px;
+    width: 62px;
+    height: 62px;
+    object-fit: contain;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform .16s ease, opacity .16s ease;
+}
+
+.shop-box-preview:hover {
+    transform: translateY(-2px) scale(1.04);
+}
+
+.shop-box-preview:active {
+    transform: translateY(0) scale(.98);
+}
+
+.shop-entry-info {
+    margin-left: 65px;
+    max-width: 120px;
+}
+
+.shop-name {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 6px;
+    white-space: nowrap;
+}
+
+.shop-price {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #e7dfd0;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.shop-money {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.shop-price.free {
+    color: #58c98d;
+    font-weight: 700;
+}
+
+.shop-buy {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid #65251d;
+    background: #8d382a;
+    color: #f3e8d9;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .14s ease, transform .14s cubic-bezier(.2,.8,.2,1), opacity .14s ease;
+}
+
+.shop-buy:hover:not(:disabled) {
+    background: #9b3c2d;
+    transform: translateY(calc(-50% - 1px));
+}
+
+.shop-buy:active:not(:disabled) {
+    transform: translateY(calc(-50% + 1px));
+}
+
+.shop-buy:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #4a3431;
+    border-bottom-color: #31211f;
+    transform: translateY(-50%) !important;
+}
+
+.balance {
+    padding: 13px 10px 3px;
+    color: #ddd5c8;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wallet {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 0;
+    margin-top: 0;
+    border-top: 1px solid #292623;
+    padding: 3px 49px 0 0;
+    background: #121110;
+}
+
+.key-balance {
+    padding: 10px 10px 3px;
+    color: #ddd5c8;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.balance-money {
+    width: 21px;
+    height: 21px;
+    object-fit: contain;
+}
+
+.balance-key {
+    width: 21px;
+    height: 21px;
+    object-fit: contain;
+}
+
+.balance span {
+    color: #58c98d;
+    font-weight: 700;
+}
+
+.key-balance span { color: #9ed8ff; }
+
+.settings-button {
+    position: absolute;
+    right: 8px;
+    bottom: 10px;
+    width: 38px;
+    height: 38px;
+    padding: 7px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.settings-button:hover,
+.settings-button:active { background: transparent; }
+.settings-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    transition: transform .15s ease, filter .15s ease;
+}
+.settings-button:hover img { transform: rotate(8deg) scale(1.06); filter: brightness(1.12); }
+.settings-button:active img { transform: rotate(-5deg) scale(.92); }
+
+.utility-backdrop {
+    position: fixed;
+    inset: 0;
+    padding: 18px;
+    display: grid;
+    place-items: center;
+    background: rgba(8,7,6,.78);
+    backdrop-filter: blur(3px);
+    z-index: 100;
+    animation: probabilityBackdropIn .18s ease-out both;
+}
+
+.utility-backdrop[hidden] { display: none; }
+
+.utility-modal {
+    width: min(430px, 100%);
+    max-height: min(680px, calc(100dvh - 36px));
+    overflow-y: auto;
+    padding: 18px;
+    border: 1px solid #3a342f;
+    border-bottom: 3px solid #713025;
+    background: #151310;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+}
+
+.utility-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.utility-title { font-size: 23px; color: #eee8dd; }
+.utility-close {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #3b3530;
+    background: #211e1a;
+    color: #ddd5c9;
+    cursor: pointer;
+}
+
+.setting-row {
+    min-height: 50px;
+    padding: 10px 2px;
+    border-top: 1px solid #292522;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.setting-copy { min-width: 0; }
+.setting-name { display: block; color: #e4ddd2; font-size: 15px; }
+.setting-note { display: block; margin-top: 3px; color: #887f75; font-size: 11px; line-height: 1.3; }
+.setting-row input[type="range"] { width: 130px; accent-color: #934033; }
+.setting-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #934033; }
+
+.statistics-open {
+    width: 100%;
+    margin-top: 13px;
+    padding: 11px 13px;
+    border: 1px solid #433a33;
+    background: #211e1a;
+    color: #eee8dd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    cursor: pointer;
+}
+
+.statistics-open img { width: 23px; height: 23px; object-fit: contain; }
+.statistics-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.stat-card { min-width: 0; padding: 13px; border: 1px solid #302b27; background: #1c1916; }
+.stat-card.wide { grid-column: 1 / -1; }
+.stat-icon { width: 27px; height: 27px; object-fit: contain; margin-bottom: 7px; }
+.stat-label { color: #91877c; font-size: 11px; }
+.stat-value { margin-top: 3px; color: #eee8dd; font-size: 19px; overflow-wrap: anywhere; }
+.stat-detail { margin-top: 3px; color: #58c98d; font-size: 12px; }
+
+.utility-close,
+.shelf-picker-close,
+.probability-close,
+.shelf-remove {
+    color: transparent !important;
+    background-image: url("assets/x.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 55% 55% !important;
+}
+
+body.reduced-effects .box.diamond img,
+body.reduced-effects .box.rainbow img,
+body.reduced-effects .box.cosmic img,
+body.reduced-effects .box.ozone img,
+body.reduced-effects .item.diamond .item-image,
+body.reduced-effects .item.rainbow .item-image,
+body.reduced-effects .item.cosmic .item-image,
+body.reduced-effects .item.ozone .item-image,
+body.reduced-effects .shelf-display-item {
+    animation: none !important;
+}
+
+/* ==================================================
+   stage
+================================================== */
+
+#stage {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    cursor: default;
+    background: #151311;
+}
+
+/* ==================================================
+   box & box variants
+================================================== */
+
+.box {
+    position: absolute;
+    width: 245px;
+    height: 245px;
+    z-index: 5;
+    cursor: pointer;
+    transform-origin: 50% 78%;
+    filter: drop-shadow(0 26px 20px rgba(0, 0, 0, .34));
+}
+
+.box img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Box Variant Filter Effects */
+.box.gold img {
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.95)) sepia(1) hue-rotate(5deg) saturate(6) brightness(1.15);
+}
+
+.box.diamond img {
+    animation: diamondBlueShine 1.35s ease-in-out infinite alternate;
+}
+
+.box.cosmic img {
+    filter: drop-shadow(0 0 20px rgba(186, 85, 211, 0.95)) invert(0.2) sepia(1) hue-rotate(240deg) saturate(5) brightness(1.2);
+    animation: cosmicGlow 1.5s ease-in-out infinite alternate;
+}
+
+.box.entering {
+    animation: boxEnter .82s cubic-bezier(.16,.82,.24,1) forwards;
+}
+
+.box.shaking {
+    animation: boxShake .52s cubic-bezier(.4,.05,.6,.95);
+}
+
+.box.opening {
+    animation: boxOpen .2s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.box.clearing {
+    animation: boxLeave .68s cubic-bezier(.55,.04,.75,.25) forwards;
+}
+
+@keyframes boxEnter {
+    0% { opacity: 0; transform: translate3d(-260px, 80px, 0) rotate(-8deg) scale(.82); }
+    38% { opacity: 1; }
+    68% { transform: translate3d(17px, -5px, 0) rotate(2deg) scale(1.025); }
+    84% { transform: translate3d(-4px, 2px, 0) rotate(-.7deg) scale(.995); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+
+@keyframes boxShake {
+    0% { transform: rotate(0deg); }
+    12% { transform: rotate(-2.4deg) translate3d(-3px,-1px,0); }
+    25% { transform: rotate(2.8deg) translate3d(4px,1px,0); }
+    38% { transform: rotate(-2.1deg) translate3d(-3px,0,0); }
+    51% { transform: rotate(1.8deg) translate3d(3px,1px,0); }
+    64% { transform: rotate(-1.2deg) translate3d(-2px,0,0); }
+    77% { transform: rotate(.75deg) translate3d(1px,0,0); }
+    90% { transform: rotate(-.3deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes boxOpen {
+    0% { transform: scale(1) translateY(0); }
+    55% { transform: scale(1.035) translateY(-3px); }
+    100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes boxLeave {
+    0% { opacity: 1; transform: translate3d(0,0,0) rotate(0) scale(1); }
+    20% { transform: translate3d(0,5px,0) rotate(-.5deg) scale(.99); }
+    100% { opacity: 0; transform: translate3d(0,165px,0) rotate(4deg) scale(.9); }
+}
+
+/* ==================================================
+   items & visual variants
+================================================== */
+
+.item {
+    position: absolute;
+    width: 108px;
+    height: 108px;
+    z-index: 10;
+    pointer-events: auto;
+    transform-origin: center center;
+}
+
+.item-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 8px 6px rgba(0,0,0,.35));
+    z-index: 1;
+}
+
+/* Item Variant Visual Transformations */
+.item.gold .item-image {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.95)) sepia(1) hue-rotate(5deg) saturate(6) brightness(1.15);
+}
+
+.item.diamond .item-image {
+    animation: diamondBlueShine 1.35s ease-in-out infinite alternate;
+}
+
+.box.diamond::after,
+.item.diamond::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(112deg,
+        transparent 22%,
+        rgba(185,245,255,.08) 36%,
+        rgba(255,255,255,.88) 48%,
+        rgba(111,221,255,.18) 57%,
+        transparent 72%);
+    background-size: 260% 100%;
+    -webkit-mask: var(--rainbow-mask) center / contain no-repeat;
+    mask: var(--rainbow-mask) center / contain no-repeat;
+    mix-blend-mode: screen;
+    animation: diamondHighlightSweep 1.8s linear infinite;
+}
+
+.item.cosmic .item-image {
+    filter: drop-shadow(0 0 14px rgba(186, 85, 211, 0.95)) invert(0.2) sepia(1) hue-rotate(240deg) saturate(5) brightness(1.2);
+    animation: cosmicGlow 1.5s ease-in-out infinite alternate;
+}
+
+.box.ozone img,
+.item.ozone .item-image,
+.shelf-display-wrap.ozone .shelf-display-item {
+    animation: ozoneColourGlow 2.2s linear infinite;
+}
+
+/* Short in-slot Shadow Wizard reveal. */
+.item.shadow-breaking::after {
+    content: "";
+    position: absolute;
+    inset: 5%;
+    z-index: 4;
+    pointer-events: none;
+    background: radial-gradient(circle, #fff 0 8%, rgba(190,222,255,.82) 18%, transparent 58%);
+    mix-blend-mode: screen;
+    animation: shadowItemFlash .34s steps(4, end) forwards;
+}
+
+.shadow-item-shard {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 9px;
+    height: 18px;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    background: rgba(220,240,255,.9);
+    border: 1px solid #fff;
+    clip-path: polygon(50% 0, 100% 70%, 55% 100%, 0 62%);
+    animation: shadowItemShard .42s steps(5, end) forwards;
+}
+
+@keyframes shadowItemFlash {
+    0% { opacity: 0; transform: scale(.35); }
+    25% { opacity: 1; transform: scale(1.15); }
+    100% { opacity: 0; transform: scale(1.7); }
+}
+
+@keyframes shadowItemShard {
+    0% { opacity: 1; transform: translate(-50%,-50%) rotate(var(--angle)); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(calc(var(--angle) + 130deg)); }
+}
+
+.box.rainbow img,
+.item.rainbow .item-image {
+    animation: rainbowColourGlow 3s linear infinite;
+    will-change: filter;
+}
+
+/* Hue and glow share this one animation, keeping their colour cycle locked. */
+@keyframes rainbowColourGlow {
+    from {
+        filter:
+            drop-shadow(0 0 7px #ff4040)
+            drop-shadow(0 0 15px #ff4040)
+            brightness(.95) sepia(1) saturate(5.5) hue-rotate(0deg);
+    }
+    to {
+        filter:
+            drop-shadow(0 0 7px #ff4040)
+            drop-shadow(0 0 15px #ff4040)
+            brightness(.95) sepia(1) saturate(5.5) hue-rotate(360deg);
+    }
+}
+
+@keyframes cosmicGlow {
+    0% {
+        filter: drop-shadow(0 0 12px rgba(186,85,211,.78)) invert(.2)
+            sepia(1) hue-rotate(240deg) saturate(5) brightness(1.08);
+    }
+    100% {
+        filter: drop-shadow(0 0 21px rgba(211,111,255,1)) invert(.2)
+            sepia(1) hue-rotate(240deg) saturate(5.4) brightness(1.28);
+    }
+}
+
+@keyframes ozoneColourGlow {
+    0% {
+        filter: drop-shadow(0 0 8px #00ffff) drop-shadow(0 0 15px rgba(0,255,255,.75))
+            brightness(1.08) sepia(1) saturate(5) hue-rotate(135deg);
+    }
+    50% {
+        filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 15px rgba(255,0,255,.75))
+            brightness(1.12) sepia(1) saturate(5) hue-rotate(285deg);
+    }
+    100% {
+        filter: drop-shadow(0 0 8px #00ffff) drop-shadow(0 0 15px rgba(0,255,255,.75))
+            brightness(1.08) sepia(1) saturate(5) hue-rotate(495deg);
+    }
+}
+
+@keyframes diamondBlueShine {
+    0% {
+        filter:
+            drop-shadow(0 0 5px rgba(224,255,255,.95))
+            drop-shadow(0 0 11px rgba(50,190,255,.82))
+            sepia(1) saturate(4.8) hue-rotate(157deg)
+            brightness(1.08) contrast(1.18);
+    }
+    100% {
+        filter:
+            drop-shadow(0 0 8px #fff)
+            drop-shadow(0 0 17px rgba(73,218,255,.98))
+            sepia(1) saturate(5.6) hue-rotate(166deg)
+            brightness(1.34) contrast(1.24);
+    }
+}
+
+@keyframes diamondHighlightSweep {
+    from { background-position: 130% 0; opacity: .48; }
+    45% { opacity: .9; }
+    to { background-position: -130% 0; opacity: .48; }
+}
+
+/* Pastel Item Rarity Badge */
+.item-info {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 700;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    pointer-events: none;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    z-index: 4;
+}
+
+.rarity-common { color: #d1d5db; }
+.rarity-uncommon { color: #86efac; }
+.rarity-rare { color: #93c5fd; }
+.rarity-epic { color: #f0abfc; }
+.rarity-legendary { color: #fde047; }
+.rarity-mythic { color: #fca5a5; }
+.rarity-secret {
+    color: transparent;
+    background: repeating-linear-gradient(90deg,
+        #00ffff 0,
+        #ff00ff 90px,
+        #00ffff 180px);
+    background-size: 180px 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: secretTextRun 2.2s linear infinite;
+}
+
+.rarity-fuwuds {
+    color: transparent;
+    background: repeating-linear-gradient(90deg,
+        var(--fruit-colour-a, #fff4d6) 0,
+        var(--fruit-colour-b, #ff8a65) 90px,
+        var(--fruit-colour-a, #fff4d6) 180px);
+    background-size: 180px 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fuwudsTextRun 2.4s linear infinite;
+}
+
+.item.secret-unrevealed .item-info {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.item.fuwuds-unrevealed .item-info {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.fuwuds-pop-item {
+    z-index: 3;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+.item .item-info {
+    transition: opacity .16s steps(2, end);
+}
+
+@keyframes secretTextRun {
+    from { background-position: 0 50%; }
+    to { background-position: 180px 50%; }
+}
+
+@keyframes fuwudsTextRun {
+    from { background-position: 0 50%; }
+    to { background-position: 180px 50%; }
+}
+
+/* Set Match Medallions */
+.match-badge {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    transform: rotate(12deg);
+    z-index: 15;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+}
+
+.item.revealing {
+    opacity: 0;
+}
+
+.item.fading {
+    animation: itemFade .56s cubic-bezier(.55,.04,.75,.25) forwards;
+}
+
+@keyframes itemReveal {
+    0% { opacity: 0; transform: translate3d(0,38px,0) rotate(-9deg) scale(.35); }
+    38% { opacity: 1; transform: translate3d(0,-16px,0) rotate(6deg) scale(1.1); }
+    58% { transform: translate3d(0,5px,0) rotate(-3deg) scale(.96); }
+    76% { transform: translate3d(0,-2px,0) rotate(1.2deg) scale(1.015); }
+    100% { opacity: 1; transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+}
+
+.rarity-eternal { color: #a9ddff; }
+
+/* ==================================================
+   shadow rarity reveal
+================================================== */
+
+.shadow-reveal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: rgba(3, 2, 5, .94);
+    opacity: 1;
+    pointer-events: all;
+    transition: opacity .6s ease;
+}
+
+.shadow-reveal.fading {
+    opacity: 0;
+}
+
+.shadow-reveal-image-shell {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    overflow: visible;
+    animation: shadowArrival .34s steps(4, end) forwards;
+}
+
+.shadow-reveal-image {
+    width: min(70vw, 720px);
+    height: min(70vh, 720px);
+    justify-self: center;
+    align-self: center;
+    object-fit: contain;
+    object-position: center;
+    animation: shadowTremor .085s steps(2, end) 14;
+    filter: drop-shadow(0 18px 25px rgba(0,0,0,.8));
+    will-change: transform;
+}
+
+.shadow-reveal.crashing::after {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0 4%, rgba(202,225,255,.9) 8%, rgba(141,177,255,.35) 22%, transparent 48%);
+    mix-blend-mode: screen;
+    animation: shadowGlassFlash .48s steps(5, end) forwards;
+}
+
+.shadow-shard {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 58px;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(135,188,255,.18) 58%, rgba(255,255,255,.72));
+    border: 1px solid rgba(225,240,255,.82);
+    clip-path: polygon(50% 0, 100% 72%, 58% 100%, 0 65%);
+    filter: drop-shadow(0 0 8px rgba(177,215,255,.8));
+}
+
+.shadow-reveal.crashing .shadow-shard {
+    animation: shadowShardBurst .7s steps(7, end) forwards;
+    animation-delay: var(--shard-delay);
+}
+
+.shadow-reveal.revealed .shadow-reveal-image {
+    filter: drop-shadow(0 0 18px rgba(151,92,255,.72)) drop-shadow(0 18px 25px rgba(0,0,0,.8));
+    animation: shadowRevealSlam .28s steps(3, end);
+}
+
+@keyframes shadowGlassFlash {
+    0% { opacity: 0; transform: scale(.3); }
+    12% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.65); }
+}
+
+@keyframes shadowShardBurst {
+    0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--shard-angle)) scale(.25); }
+    15% { opacity: .95; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--shard-x)), calc(-50% + var(--shard-y))) rotate(calc(var(--shard-angle) + 180deg)) scale(.8); }
+}
+
+@keyframes shadowRevealSlam {
+    0% { opacity: 0; transform: scale(1.34) rotate(-2deg); filter: brightness(3); }
+    34% { opacity: 1; transform: scale(.88) rotate(1deg); filter: brightness(1.5); }
+    67% { transform: scale(1.09) rotate(-.5deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes shadowArrival {
+    0% { opacity: 0; transform: scale(.08) rotate(-5deg); }
+    50% { opacity: 1; transform: scale(1.1) rotate(3deg); }
+    75% { opacity: 1; transform: scale(.94) rotate(-2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes shadowTremor {
+    0% { transform: translate3d(-4px, 2px, 0) rotate(-.45deg); }
+    25% { transform: translate3d(3px, -3px, 0) rotate(.35deg); }
+    50% { transform: translate3d(-2px, -1px, 0) rotate(-.25deg); }
+    75% { transform: translate3d(4px, 3px, 0) rotate(.45deg); }
+    100% { transform: translate3d(-3px, 1px, 0) rotate(-.35deg); }
+}
+
+@keyframes itemFade {
+    0% { opacity: 1; transform: translate3d(0,0,0) rotate(0) scale(1); }
+    100% { opacity: 0; transform: translate3d(0,-52px,0) rotate(-3deg) scale(.9); }
+}
+
+/* ==================================================
+   money popup
+================================================== */
+
+.money-pop {
+    position: absolute;
+    z-index: 30;
+    pointer-events: none;
+    color: #58c98d;
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 0 2px 0 rgba(0,0,0,.4);
+    animation: moneyPop .9s cubic-bezier(.16,.8,.25,1) forwards;
+}
+
+@keyframes moneyPop {
+    0% { opacity: 0; transform: translate(-50%,9px) scale(.75); }
+    18% { opacity: 1; transform: translate(-50%,0) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-46px) scale(1); }
+}
+
+/* ==================================================
+   persistent display shelf
+================================================== */
+
+.shelf-preview {
+    position: relative;
+    flex: 0 0 108px;
+    min-height: 108px;
+    margin: 0 4px 8px;
+    overflow: hidden;
+    border-bottom: 1px solid #292522;
+    cursor: zoom-in;
+    pointer-events: auto;
+}
+
+.display-shelf-image {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.shelf-slots {
+    position: absolute;
+    left: 5.5%;
+    right: 5.5%;
+    bottom: calc(82% + var(--shelf-slot-offset, 0%));
+    height: clamp(54px, 6.5vw, 82px);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    gap: 2%;
+    pointer-events: none;
+}
+
+.shelf-preview .shelf-slots {
+    left: 5.5%;
+    right: 5.5%;
+    bottom: calc(52px + var(--shelf-slot-offset, 0%));
+    height: 43px;
+}
+
+.shelf-preview .shelf-add {
+    width: min(30px, 82%);
+    font-size: 18px;
+}
+
+.shelf-preview .shelf-display-wrap {
+    width: min(35px, 86%);
+}
+
+.shelf-preview .shelf-remove {
+    top: -5px;
+    right: -5px;
+    width: 15px;
+    height: 15px;
+    font-size: 10px;
+    line-height: 15px;
+}
+
+.shelf-income {
+    position: absolute;
+    right: 5px;
+    bottom: 3px;
+    z-index: 3;
+    padding: 2px 4px;
+    background: rgba(18,17,16,.82);
+    color: #58c98d;
+    font-size: 10px;
+    pointer-events: none;
+}
+
+.shelf-view-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 340;
+    display: grid;
+    place-items: center;
+    padding: 5vw;
+    background: rgba(4,3,3,.9);
+    cursor: zoom-out;
+    animation: probabilityBackdropIn .16s ease-out;
+}
+
+.shelf-view-backdrop.closing {
+    pointer-events: none;
+    animation: shelfBackdropOut .2s ease-in forwards;
+}
+
+.shelf-view-backdrop.closing .shelf-large {
+    animation: shelfViewOut .2s ease-in forwards;
+}
+
+.shelf-view-panel {
+    width: min(1100px, 92vw);
+    display: grid;
+    gap: 16px;
+    cursor: default;
+}
+
+.shelf-large {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2048 / 500;
+    overflow: visible;
+    cursor: default;
+}
+
+.shelf-large .display-shelf-image { bottom: 0; }
+.shelf-large .shelf-slots {
+    left: 5.5%;
+    right: 5.5%;
+    bottom: 82%;
+    height: min(110px, 12vw);
+}
+
+.shelf-large .shelf-add { width: min(62px, 78%); }
+.shelf-large .shelf-display-wrap { width: min(82px, 84%); }
+
+.shelf-skin-shop {
+    padding: 10px;
+    background: rgba(20,18,16,.96);
+    border: 1px solid #39332e;
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+
+.shelf-skin-title {
+    margin-bottom: 8px;
+    color: #aaa094;
+    font-size: 12px;
+    text-transform: lowercase;
+}
+
+.shelf-skin-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(132px, 1fr);
+    gap: 7px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+    scrollbar-width: thin;
+    scrollbar-color: #713025 #1a1714;
+}
+
+.shelf-skin-list::-webkit-scrollbar { height: 7px; }
+.shelf-skin-list::-webkit-scrollbar-track { background: #1a1714; }
+.shelf-skin-list::-webkit-scrollbar-thumb {
+    background: #713025;
+    border: 2px solid #1a1714;
+}
+
+.shelf-skin-choice {
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid #302b27;
+    background: #1d1a17;
+    color: #d8d0c5;
+    text-align: left;
+    cursor: pointer;
+}
+
+.shelf-skin-choice:hover:not(:disabled) { background: #28231f; border-color: #67594e; }
+.shelf-skin-choice:disabled { opacity: .42; cursor: not-allowed; }
+.shelf-skin-choice.equipped { border-color: #58c98d; background: #1d2821; }
+.shelf-skin-choice img {
+    display: block;
+    width: 100%;
+    height: 34px;
+    margin-bottom: 5px;
+    object-fit: contain;
+}
+
+.shelf-skin-name { font-size: 12px; }
+.shelf-skin-buff { margin-top: 2px; color: #58c98d; font-size: 10px; }
+.shelf-skin-action { margin-top: 3px; color: #a99f92; font-size: 10px; }
+.shelf-skin-choice.equipped .shelf-skin-action { color: #72dda1; }
+
+.shelf-slot {
+    position: relative;
+    height: 100%;
+    display: grid;
+    place-items: end center;
+    pointer-events: none;
+}
+
+.shelf-add {
+    width: min(54px, 82%);
+    height: auto;
+    aspect-ratio: .87;
+    padding: 0;
+    border: 1px dashed rgba(238,232,221,.38);
+    background: rgba(18,17,16,.66);
+    color: rgba(238,232,221,.72);
+    font-size: clamp(20px, 2.5vw, 30px);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: color .14s ease, border-color .14s ease, background .14s ease;
+}
+
+.shelf-add:hover {
+    border-color: #eee8dd;
+    background: rgba(30,27,24,.88);
+    color: #fff;
+}
+
+.shelf-display-wrap {
+    position: relative;
+    width: min(68px, 86%);
+    height: auto;
+    aspect-ratio: .89;
+    pointer-events: auto;
+}
+
+.shelf-display-item {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform-origin: 50% 92%;
+    cursor: grab;
+    filter: drop-shadow(0 6px 5px rgba(0,0,0,.48));
+    will-change: transform;
+}
+
+.shelf-display-item:active { cursor: grabbing; }
+
+.shelf-display-wrap.gold .shelf-display-item {
+    filter: drop-shadow(0 0 9px rgba(255,215,0,.95)) sepia(1) hue-rotate(5deg) saturate(6) brightness(1.15);
+}
+
+.shelf-display-wrap.diamond .shelf-display-item {
+    animation: diamondBlueShine 1.35s ease-in-out infinite alternate;
+}
+
+.shelf-display-wrap.rainbow .shelf-display-item {
+    animation: rainbowColourGlow 3s linear infinite;
+}
+
+.shelf-display-wrap.cosmic .shelf-display-item {
+    filter: drop-shadow(0 0 12px rgba(186,85,211,.95)) invert(.2) sepia(1) hue-rotate(240deg) saturate(5) brightness(1.2);
+    animation: cosmicGlow 1.5s ease-in-out infinite alternate;
+}
+
+.shelf-remove {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 19px;
+    height: 19px;
+    padding: 0;
+    border: 0;
+    background: #2a2521;
+    color: #cfc7bb;
+    font-size: 13px;
+    line-height: 19px;
+    opacity: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: opacity .12s ease, background .12s ease;
+}
+
+.shelf-display-wrap:hover .shelf-remove,
+.shelf-remove:focus-visible { opacity: 1; }
+.shelf-remove:hover { background: #8d382a; color: #fff; }
+
+.shelf-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 360;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(7,6,5,.8);
+    animation: probabilityBackdropIn .16s ease-out;
+}
+
+.shelf-picker {
+    width: min(700px, 100%);
+    max-height: min(720px, 86dvh);
+    padding: 18px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    background: #171512;
+    border: 1px solid #39332e;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+}
+
+.shelf-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #302b27;
+}
+
+.shelf-picker-title { color: #eee8dd; font-size: 20px; }
+.shelf-picker-close {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    background: #24201d;
+    color: #bcb2a5;
+    cursor: pointer;
+}
+
+.shelf-picker-grid {
+    min-height: 0;
+    padding: 12px 2px 4px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+    align-content: start;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #713025 #1a1714;
+}
+
+.shelf-picker-grid::-webkit-scrollbar { width: 8px; }
+.shelf-picker-grid::-webkit-scrollbar-track { background: #1a1714; }
+.shelf-picker-grid::-webkit-scrollbar-thumb {
+    background: #713025;
+    border: 2px solid #1a1714;
+}
+
+.shelf-choice {
+    min-width: 0;
+    padding: 9px 6px;
+    border: 1px solid #2b2723;
+    background: #1d1a17;
+    color: #cfc7bb;
+    text-align: center;
+    cursor: pointer;
+}
+
+.shelf-choice:hover:not(:disabled) { background: #28231f; border-color: #4a4038; }
+.shelf-choice:disabled { opacity: .38; cursor: not-allowed; }
+.shelf-choice img {
+    display: block;
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 5px;
+    object-fit: contain;
+}
+.shelf-choice-name {
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.shelf-picker-empty {
+    grid-column: 1 / -1;
+    padding: 30px;
+    color: #8c8376;
+    text-align: center;
+}
+
+.rarity-separator {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    margin: 7px 0 1px;
+    color: #8f867a;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: lowercase;
+}
+
+.rarity-separator:first-child { margin-top: 0; }
+.rarity-separator::before,
+.rarity-separator::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: #302b27;
+}
+
+.variant-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 380;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(7,6,5,.86);
+}
+
+.variant-picker {
+    width: min(430px, 100%);
+    padding: 18px;
+    background: #171512;
+    border: 1px solid #39332e;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+}
+
+.variant-picker-title {
+    margin-bottom: 13px;
+    color: #eee8dd;
+    font-size: 20px;
+    text-align: center;
+}
+
+.variant-picker-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+    gap: 7px;
+}
+
+.variant-choice {
+    min-width: 0;
+    padding: 10px 5px;
+    border: 1px solid #332d28;
+    background: #211e1a;
+    color: #ddd5c9;
+    cursor: pointer;
+}
+
+.variant-choice:hover:not(:disabled) { background: #2d2823; border-color: #66574c; }
+.variant-choice:disabled { opacity: .28; cursor: not-allowed; }
+
+/* ==================================================
+   next box prompt
+================================================== */
+
+#next-prompt {
+    position: absolute;
+    left: 50%;
+    bottom: 40px;
+    width: 250px;
+    transform: translateX(-50%) translateY(18px) scale(.96);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    text-align: center;
+    z-index: 15;
+    transition: opacity .28s ease, transform .42s cubic-bezier(.16,.8,.24,1);
+}
+
+#next-prompt.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0) scale(1);
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.next-text { color: #eee8dd; font-size: 18px; font-weight: 700; }
+.next-subtext { margin-top: 2px; color: #8c8376; font-size: 13px; font-weight: 700; }
+
+/* ==================================================
+   probability modal
+================================================== */
+
+.probability-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(7, 6, 5, .78);
+    animation: probabilityBackdropIn .18s ease-out;
+}
+
+.probability-modal {
+    width: min(720px, 100%);
+    max-height: min(760px, 88vh);
+    padding: 20px;
+    overflow: hidden;
+    background: #171512;
+    border: 1px solid #39332e;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55);
+    animation: probabilityModalIn .24s cubic-bezier(.16,.8,.24,1);
+}
+
+.probability-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #302b27;
+}
+
+.probability-title {
+    color: #eee8dd;
+    font-size: 21px;
+}
+
+.probability-subtitle {
+    margin-top: 2px;
+    color: #8c8376;
+    font-size: 12px;
+}
+
+.probability-close {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    background: #24201d;
+    color: #bcb2a5;
+    cursor: pointer;
+}
+
+.probability-close:hover { background: #302a26; color: #eee8dd; }
+
+.probability-grid {
+    max-height: calc(min(760px, 88vh) - 92px);
+    padding: 14px 2px 2px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 9px;
+}
+
+.probability-item {
+    min-width: 0;
+    padding: 10px 7px 9px;
+    text-align: center;
+    background: #1d1a17;
+    border: 1px solid #2b2723;
+}
+
+.probability-item-image {
+    display: block;
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 6px;
+    object-fit: contain;
+}
+
+.probability-item-image.unknown {
+    filter: brightness(0);
+    opacity: .72;
+}
+
+.probability-item-name {
+    overflow: hidden;
+    color: #cfc7bb;
+    font-size: 12px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.probability-item-chance {
+    margin-top: 4px;
+    color: #58c98d;
+    font-size: 13px;
+}
+
+.probability-item.bonus {
+    border-color: #34434c;
+}
+
+.probability-item.bonus .probability-item-chance {
+    color: #9ed8ff;
+}
+
+.probability-variants {
+    grid-column: 1 / -1;
+    margin-top: 7px;
+    padding: 13px 12px 14px;
+    background: #191714;
+    border: 1px solid #302b27;
+}
+
+.probability-variants-title {
+    margin-bottom: 9px;
+    color: #bcb2a5;
+    font-size: 12px;
+    text-transform: lowercase;
+}
+
+.probability-variants-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+    gap: 7px;
+}
+
+.probability-variant {
+    min-width: 0;
+    padding: 8px 5px;
+    text-align: center;
+    background: #211e1a;
+}
+
+.probability-variant-name {
+    overflow: hidden;
+    color: #ddd5c9;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.probability-variant-name.gold,
+.variant-choice.gold { color: #ffd84f; }
+
+.probability-variant-name.diamond,
+.variant-choice.diamond { color: #8eeaff; }
+
+.probability-variant-name.rainbow,
+.variant-choice.rainbow {
+    color: transparent;
+    background: linear-gradient(90deg, #ff5757, #ffe45b, #65f58a, #62cfff, #bd74ff, #ff5757);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: variantTextRun 2.4s linear infinite;
+}
+
+.probability-variant-name.cosmic,
+.variant-choice.cosmic { color: #c78cff; text-shadow: 0 0 7px rgba(178,91,255,.55); }
+
+.probability-variant-name.ozone,
+.variant-choice.ozone {
+    color: transparent;
+    background: repeating-linear-gradient(90deg, #00ffff 0, #ff00ff 90px, #00ffff 180px);
+    background-size: 180px 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: secretTextRun 2.2s linear infinite;
+}
+
+@keyframes variantTextRun {
+    to { background-position: 200% 50%; }
+}
+
+.probability-variant-chance {
+    margin-top: 3px;
+    color: #58c98d;
+    font-size: 12px;
+}
+
+@keyframes probabilityBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes shelfBackdropOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes shelfViewOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(.975); }
+}
+
+@keyframes probabilityModalIn {
+    from { opacity: 0; transform: translateY(12px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 700px) {
+    #shop { width: 190px; min-width: 190px; padding: 18px 10px 12px; }
+    .shop-title { font-size: 20px; }
+    .shop-entry { min-height: 75px; padding-right: 60px; }
+    .shop-box-preview { width: 52px; height: 52px; top: 11px; }
+    .shop-entry-info { margin-left: 55px; max-width: 75px; }
+    .shop-name { font-size: 12px; }
+    .shop-buy { width: 52px; height: 28px; right: 7px; font-size: 11px; }
+    .shop-price { font-size: 11px; }
+    .balance { font-size: 13px; }
+    .settings-button { right: 6px; bottom: 9px; width: 34px; height: 34px; }
+    .box { width: 195px; height: 195px; }
+    .item { width: 82px; height: 82px; }
+    .match-badge { width: 40px; height: 40px; top: -10px; right: -10px; }
+    .probability-backdrop { padding: 12px; }
+    .probability-modal { padding: 14px; }
+    .probability-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+    <aside id="shop">
+        <div class="shop-main">
+            <div id="shelf-preview" class="shelf-preview" aria-label="display shelf">
+                <img class="display-shelf-image" src="shelves/shelf.png" alt="">
+                <div id="shelf-preview-slots" class="shelf-slots"></div>
+                <div id="shelf-income" class="shelf-income">+$0 / 5s</div>
+            </div>
+            <div class="shop-title">shop</div>
+            <div class="shop-line"></div>
+
+            <div class="shop-list">
+                <!-- cardboard box -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/cardboardbox/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">cardboard box</div>
+                        <div class="shop-price free">free</div>
+                    </div>
+                    <button class="shop-buy" data-box="cardboardbox" data-price="0" data-luck="1" data-variant-mult="1" data-min-items="1" data-max-items="3">open</button>
+                </div>
+
+                <!-- metal box -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/metalbox/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">metal box</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            150
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="metalbox" data-price="150" data-luck="2" data-variant-mult="1.2" data-min-items="1" data-max-items="3">open</button>
+                </div>
+
+                <!-- supply crate -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/supplycrate/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">supply crate</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            1,200
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="supplycrate" data-price="1200" data-luck="4" data-variant-mult="1.5" data-min-items="2" data-max-items="4">open</button>
+                </div>
+
+                <!-- stasis pod -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/staspod/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">stasis pod</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            10,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="staspod" data-price="10000" data-luck="10" data-variant-mult="2" data-min-items="2" data-max-items="6">open</button>
+                </div>
+
+                <!-- chest -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/chest/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">chest</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            35,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="chest" data-price="35000" data-luck="20" data-variant-mult="3.2" data-min-items="3" data-max-items="7">open</button>
+                </div>
+
+                <!-- portal -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/portal/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">portal</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            150,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="portal" data-price="150000" data-luck="35" data-variant-mult="5" data-min-items="4" data-max-items="10">open</button>
+                </div>
+
+                <!-- shipping container -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/container/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">container</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            325,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="container" data-price="325000" data-luck="50" data-variant-mult="6.5" data-min-items="6" data-max-items="12">open</button>
+                </div>
+
+                <!-- lucky block -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/luckyblock/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">lucky block</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            650,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="luckyblock" data-price="650000" data-luck="75" data-variant-mult="9" data-min-items="8" data-max-items="15">open</button>
+                </div>
+
+                <!-- larp box: exclusive programming-language loot pool -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/larpbox/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">larp box</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            1,500,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="larpbox" data-price="1500000" data-luck="1" data-variant-mult="11" data-min-items="4" data-max-items="8">open</button>
+                </div>
+
+                <!-- eternal box -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/eternalbox/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">eternal box</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="items/eternalkey.png">
+                            10
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="eternalbox" data-price="0" data-key-price="10" data-luck="110" data-variant-mult="14" data-min-items="10" data-max-items="18">open</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="wallet">
+            <div class="key-balance">
+                <img class="balance-key" src="items/eternalkey.png">
+                <span id="eternal-keys">0</span>
+            </div>
+            <div class="balance">
+                <img class="balance-money" src="assets/money.png">
+                <span id="balance">0</span>
+            </div>
+            <button id="settings-button" class="settings-button" type="button" aria-label="settings">
+                <img src="assets/settings.png" alt="">
+            </button>
+        </div>
+    </aside>
+
+    <main id="stage">
+        <div id="next-prompt">
+            <div class="next-text">open another box</div>
+            <div class="next-subtext">click anywhere</div>
+        </div>
+    </main>
+</div>
+
+<div id="settings-backdrop" class="utility-backdrop" hidden>
+    <section class="utility-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="utility-header">
+            <div id="settings-title" class="utility-title">settings</div>
+            <button class="utility-close" type="button" data-close="settings-backdrop" aria-label="close">×</button>
+        </div>
+        <label class="setting-row">
+            <span class="setting-copy"><span class="setting-name">mute music</span></span>
+            <input id="mute-music" type="checkbox">
+        </label>
+        <label class="setting-row">
+            <span class="setting-copy"><span class="setting-name">music volume</span></span>
+            <input id="music-volume" type="range" min="0" max="100" step="1">
+        </label>
+        <label class="setting-row">
+            <span class="setting-copy"><span class="setting-name">mute sounds</span></span>
+            <input id="mute-sounds" type="checkbox">
+        </label>
+        <label class="setting-row">
+            <span class="setting-copy"><span class="setting-name">sound volume</span></span>
+            <input id="sound-volume" type="range" min="0" max="100" step="1">
+        </label>
+        <label class="setting-row">
+            <span class="setting-copy"><span class="setting-name">lightweight effects</span><span class="setting-note">stops looping variant animations for better performance</span></span>
+            <input id="reduced-effects" type="checkbox">
+        </label>
+        <button id="statistics-open" class="statistics-open" type="button">
+            <img src="assets/statistics.png" alt=""> statistics
+        </button>
+    </section>
+</div>
+
+<div id="statistics-backdrop" class="utility-backdrop" hidden>
+    <section class="utility-modal" role="dialog" aria-modal="true" aria-labelledby="statistics-title">
+        <div class="utility-header">
+            <div id="statistics-title" class="utility-title">statistics</div>
+            <button class="utility-close" type="button" data-close="statistics-backdrop" aria-label="close">×</button>
+        </div>
+        <div class="statistics-grid">
+            <div class="stat-card"><img class="stat-icon" src="assets/statboxes.png" alt=""><div class="stat-label">boxes opened</div><div id="stat-boxes" class="stat-value">0</div></div>
+            <div class="stat-card"><img class="stat-icon" src="assets/statitems.png" alt=""><div class="stat-label">items pulled</div><div id="stat-items" class="stat-value">0</div></div>
+            <div class="stat-card"><img class="stat-icon" src="assets/statmoney.png" alt=""><div class="stat-label">pull money earned</div><div id="stat-money" class="stat-value">$0</div></div>
+            <div class="stat-card"><img class="stat-icon" src="assets/statvariants.png" alt=""><div class="stat-label">variant pulls</div><div id="stat-variants" class="stat-value">0</div></div>
+            <div class="stat-card"><img class="stat-icon" src="assets/statkeys.png" alt=""><div class="stat-label">keys found</div><div id="stat-keys" class="stat-value">0</div></div>
+            <div class="stat-card"><img class="stat-icon" src="assets/statdiscovered.png" alt=""><div class="stat-label">items discovered</div><div id="stat-discovered" class="stat-value">0</div></div>
+            <div class="stat-card wide"><img class="stat-icon" src="assets/statrarest.png" alt=""><div class="stat-label">rarest pull</div><div id="stat-rarest" class="stat-value">none yet</div><div id="stat-rarest-odds" class="stat-detail">open a box to start tracking</div></div>
+        </div>
+    </section>
+</div>
+
+<script>
+
+/* ==================================================
+   item data
+================================================== */
+
+const ITEMS = [
+    // COMMON
+    { name: "apple", rarity: "common", weight: 70, value: 7, image: "items/apple.png" },
+    { name: "banana", rarity: "common", weight: 65, value: 8, image: "items/banana.png" },
+    { name: "bread", rarity: "common", weight: 60, value: 12, image: "items/bread.png" },
+    { name: "soda can", rarity: "common", weight: 55, value: 15, image: "items/sodacan.png" },
+    { name: "water bottle", rarity: "common", weight: 50, value: 18, image: "items/waterbottle.png" },
+    { name: "lighter", rarity: "common", weight: 65, value: 10, image: "items/lighter.png" },
+    { name: "mug", rarity: "common", weight: 60, value: 14, image: "items/mug.png" },
+    { name: "pot plant", rarity: "common", weight: 50, value: 20, image: "items/potplant.png" },
+    { name: "spoon", rarity: "common", weight: 62, value: 11, image: "items/spoon.png" },
+    { name: "toothbrush", rarity: "common", weight: 64, value: 9, image: "items/toothbrush.png" },
+    { name: "tape", rarity: "common", weight: 61, value: 11, image: "items/tape.png" },
+    { name: "plunger", rarity: "common", weight: 58, value: 13, image: "items/plunger.png" },
+    { name: "hanger", rarity: "common", weight: 56, value: 16, image: "items/hanger.png" },
+    { name: "stapler", rarity: "common", weight: 52, value: 18, image: "items/stapler.png" },
+    { name: "remote", rarity: "common", weight: 48, value: 22, image: "items/remote.png" },
+
+    // UNCOMMON
+    { name: "duct tape", rarity: "uncommon", weight: 35, value: 40, image: "items/ducttape.png" },
+    { name: "screwdriver", rarity: "uncommon", weight: 30, value: 52, image: "items/screwdriver.png" },
+    { name: "flashlight", rarity: "uncommon", weight: 25, value: 72, image: "items/flashlight.png" },
+    { name: "teddy bear", rarity: "uncommon", weight: 30, value: 60, image: "items/teddybear.png" },
+    { name: "lantern", rarity: "uncommon", weight: 24, value: 85, image: "items/lantern.png" },
+    { name: "rubber duck", rarity: "uncommon", weight: 32, value: 48, image: "items/rubberduck.png" },
+    { name: "traffic cone", rarity: "uncommon", weight: 27, value: 68, image: "items/trafficcone.png" },
+    { name: "bubble tea", rarity: "uncommon", weight: 33, value: 45, image: "items/bubbletea.png" },
+    { name: "rubber chicken", rarity: "uncommon", weight: 31, value: 55, image: "items/rubberchicken.png" },
+    { name: "ramen", rarity: "uncommon", weight: 29, value: 62, image: "items/ramen.png" },
+    { name: "alarm clock", rarity: "uncommon", weight: 28, value: 65, image: "items/alarmclock.png" },
+    { name: "watering can", rarity: "uncommon", weight: 26, value: 78, image: "items/wateringcan.png" },
+    { name: "desk fan", rarity: "uncommon", weight: 24, value: 86, image: "items/deskfan.png" },
+
+    // RARE
+    { name: "key", rarity: "rare", weight: 15, value: 190, image: "items/key.png" },
+    { name: "gameboy", rarity: "rare", weight: 14, value: 225, image: "items/gameboy.png" },
+    { name: "old book", rarity: "rare", weight: 12, value: 270, image: "items/oldbook.png" },
+    { name: "map", rarity: "rare", weight: 11, value: 325, image: "items/map.png" },
+    { name: "pizza", rarity: "rare", weight: 13, value: 245, image: "items/pizza.png" },
+    { name: "8 ball", rarity: "rare", weight: 14.5, value: 210, image: "items/8ball.png" },
+    { name: "vhs tape", rarity: "rare", weight: 13, value: 240, image: "items/vhstape.png" },
+    { name: "polaroid", rarity: "rare", weight: 12.5, value: 280, image: "items/polaroid.png" },
+    { name: "gnome", rarity: "rare", weight: 11.5, value: 310, image: "items/gnome.png" },
+    { name: "horse", rarity: "rare", weight: 10.5, value: 360, image: "items/horse.png" },
+    { name: "monitor", rarity: "rare", weight: 10, value: 390, image: "items/monitor.png" },
+
+    // EPIC
+    { name: "energy crystal", rarity: "epic", weight: 8, value: 700, image: "items/energycrystal.png" },
+    { name: "energy orb", rarity: "epic", weight: 7, value: 820, image: "items/energyorb.png" },
+    { name: "samurai robe", rarity: "epic", weight: 6, value: 980, image: "items/samurairobe.png" },
+    { name: "toxic canister", rarity: "epic", weight: 6, value: 930, image: "items/toxiccanister.png" },
+    { name: "camera", rarity: "epic", weight: 6.5, value: 880, image: "items/camera.png" },
+    { name: "medkit", rarity: "epic", weight: 5.5, value: 1100, image: "items/medkit.png" },
+    { name: ":3 mug", rarity: "epic", weight: 6.2, value: 920, image: "items/:3mug.png" },
+    { name: "hourglass", rarity: "epic", weight: 5.8, value: 1050, image: "items/hourglass.png" },
+    { name: "black cat", rarity: "epic", weight: 5.4, value: 1180, image: "items/blackcat.png" },
+
+    // LEGENDARY
+    { name: "flamecaster", rarity: "legendary", weight: 3, value: 6500, image: "items/flamecaster.png" },
+    { name: "grimoire", rarity: "legendary", weight: 2.5, value: 8200, image: "items/grimoire.png" },
+    { name: "space helmet", rarity: "legendary", weight: 2, value: 10500, image: "items/spacehelmet.png" },
+    { name: "royal crown", rarity: "legendary", weight: 1.5, value: 14000, image: "items/royalcrown.png" },
+    { name: "galaxy in a jar", rarity: "legendary", weight: 2.2, value: 9600, image: "items/galaxyinajar.png" },
+    { name: "my taxes", rarity: "legendary", weight: 2.3, value: 9000, image: "items/mytaxes.png" },
+
+    // MYTHIC
+    { name: "lioness statue", rarity: "mythic", weight: 0.4, value: 75000, image: "items/lionessstatue.png" },
+    { name: "goldfish", rarity: "mythic", weight: 0.35, value: 90000, image: "items/goldfish.png" },
+    { name: "seal plush", rarity: "mythic", weight: 0.36, value: 85000, image: "items/seal.png" },
+    { name: "milly", rarity: "mythic", weight: 0.34, value: 95000, image: "items/milly.png" },
+    { name: "galaxicat", rarity: "mythic", weight: 0.32, value: 110000, image: "items/galaxicat.png" },
+
+    // SECRET
+    { name: "among us", rarity: "secret", weight: 0.30, value: 350000, image: "assets/mystery.png", revealImage: "items/amongus.png" },
+    { name: "doto", rarity: "secret", weight: 0.29, value: 375000, image: "assets/mystery.png", revealImage: "items/doto.png" },
+    { name: "fnac", rarity: "secret", weight: 0.28, value: 400000, image: "assets/mystery.png", revealImage: "items/fnac.png" },
+    { name: "shadow wizards", rarity: "secret", weight: 0.25, value: 500000, image: "assets/mystery.png", revealImage: "items/shadowwizards.png" },
+
+    // FUWUDS
+    { name: "marshmellowos", rarity: "fuwuds", weight: 0.110, value: 625000, image: "assets/mysteryfruit.png", revealImage: "items/marshmellowos.png", nameColours: ["#fff8ed", "#e7c5bc"] },
+    { name: "apl", rarity: "fuwuds", weight: 0.105, value: 700000, image: "assets/mysteryfruit.png", revealImage: "items/apl.png", nameColours: ["#ff6868", "#b91432"] },
+    { name: "liwime", rarity: "fuwuds", weight: 0.100, value: 775000, image: "assets/mysteryfruit.png", revealImage: "items/liwime.png", nameColours: ["#e1ff70", "#54bd3b"] },
+    { name: "oworange", rarity: "fuwuds", weight: 0.095, value: 875000, image: "assets/mysteryfruit.png", revealImage: "items/oworange.png", nameColours: ["#ffd45f", "#ff7818"] },
+    { name: "bluwuberry", rarity: "fuwuds", weight: 0.090, value: 1000000, image: "assets/mysteryfruit.png", revealImage: "items/bluwuberry.png", nameColours: ["#67bdff", "#3447c7"] },
+    { name: "cowookie", rarity: "fuwuds", weight: 0.085, value: 1125000, image: "assets/mysteryfruit.png", revealImage: "items/cowookie.png", nameColours: ["#e5ad68", "#6f3b24"] },
+    { name: "candycown", rarity: "fuwuds", weight: 0.080, value: 1250000, image: "assets/mysteryfruit.png", revealImage: "items/candycown.png", nameColours: ["#fff1bd", "#ff791f"] },
+    { name: "bruwud", rarity: "fuwuds", weight: 0.075, value: 1400000, image: "assets/mysteryfruit.png", revealImage: "items/bruwud.png", nameColours: ["#fff0ce", "#b96c32"] },
+    { name: "powocakes", rarity: "fuwuds", weight: 0.070, value: 1575000, image: "assets/mysteryfruit.png", revealImage: "items/powocakes.png", nameColours: ["#ffe990", "#d98b26"] },
+    { name: "powoptart", rarity: "fuwuds", weight: 0.065, value: 1800000, image: "assets/mysteryfruit.png", revealImage: "items/powoptart.png", nameColours: ["#ff9fd2", "#ff4f91"] },
+
+    // LARP BOX EXCLUSIVES (grand ranking, rarest to least rare)
+    { name: "c", rarity: "secret", weight: 0.12, value: 7000000, image: "logo-items/c.png", pool: "larpbox" },
+    { name: "nzwo", rarity: "secret", weight: 0.12, value: 7000000, image: "logo-items/nzwo.png", pool: "larpbox" },
+    { name: "assembly", rarity: "secret", weight: 0.18, value: 5200000, image: "logo-items/asm.png", pool: "larpbox" },
+
+    { name: "linus torvalds", rarity: "mythic", weight: 0.27, value: 3900000, image: "logo-items/linustorvalds.png", pool: "larpbox" },
+    { name: "linux", rarity: "mythic", weight: 0.38, value: 3000000, image: "logo-items/linux.png", pool: "larpbox" },
+    { name: "zig", rarity: "legendary", weight: 0.65, value: 1900000, image: "logo-items/zig.png", pool: "larpbox" },
+    { name: "vulkan", rarity: "legendary", weight: 0.82, value: 1550000, image: "logo-items/vulkan.png", pool: "larpbox" },
+    { name: "unix", rarity: "legendary", weight: 1.00, value: 1300000, image: "logo-items/unix.png", pool: "larpbox" },
+    { name: "c#", rarity: "legendary", weight: 1.20, value: 1100000, image: "logo-items/c%23.png", pool: "larpbox" },
+    { name: "bsd", rarity: "legendary", weight: 1.42, value: 925000, image: "logo-items/bsd.png", pool: "larpbox" },
+    { name: "github", rarity: "legendary", weight: 1.55, value: 860000, image: "logo-items/github.png", pool: "larpbox" },
+
+    { name: "rust", rarity: "epic", weight: 1.68, value: 800000, image: "logo-items/rust.png", pool: "larpbox" },
+    { name: "go", rarity: "epic", weight: 1.96, value: 700000, image: "logo-items/golang.png", pool: "larpbox" },
+    { name: "bash", rarity: "epic", weight: 2.28, value: 610000, image: "logo-items/bash.png", pool: "larpbox" },
+    { name: "templeos", rarity: "epic", weight: 2.62, value: 540000, image: "logo-items/templeos.png", pool: "larpbox" },
+    { name: "lua", rarity: "epic", weight: 3.00, value: 475000, image: "logo-items/lua.png", pool: "larpbox" },
+
+    { name: "opengl", rarity: "rare", weight: 3.88, value: 375000, image: "logo-items/opengl.png", pool: "larpbox" },
+    { name: "webgpu", rarity: "uncommon", weight: 3.88, value: 375000, image: "logo-items/webgpu.png", pool: "larpbox" },
+    { name: "gdscript", rarity: "rare", weight: 4.38, value: 335000, image: "logo-items/godot.png", pool: "larpbox" },
+    { name: "python", rarity: "rare", weight: 4.92, value: 300000, image: "logo-items/python.png", pool: "larpbox" },
+    { name: "macos", rarity: "rare", weight: 6.12, value: 240000, image: "logo-items/macos.png", pool: "larpbox" },
+
+    { name: "kotlin", rarity: "uncommon", weight: 6.78, value: 215000, image: "logo-items/kotlin.png", pool: "larpbox" },
+    { name: "directx", rarity: "uncommon", weight: 7.48, value: 190000, image: "logo-items/directx.png", pool: "larpbox" },
+    { name: "java", rarity: "uncommon", weight: 8.22, value: 170000, image: "logo-items/java.png", pool: "larpbox" },
+    { name: "windows", rarity: "uncommon", weight: 9.82, value: 132500, image: "logo-items/windows.png", pool: "larpbox" },
+    { name: "metal", rarity: "uncommon", weight: 10.68, value: 115000, image: "logo-items/metal.png", pool: "larpbox" },
+
+    { name: "c++", rarity: "common", weight: 11.58, value: 100000, image: "logo-items/c++.png", pool: "larpbox" }
+];
+
+/* ==================================================
+   variants
+================================================== */
+
+const VARIANTS = [
+    { name: "normal", chance: 87.49, multiplier: 1 },
+    { name: "gold", chance: 10, multiplier: 2 },
+    { name: "diamond", chance: 2, multiplier: 3 },
+    { name: "rainbow", chance: 0.5, multiplier: 5 },
+    { name: "cosmic", chance: 0.01, multiplier: 15 },
+    { name: "ozone", chance: 0.005, multiplier: 25, boxOnly: "larpbox" }
+];
+
+const SHELF_SKINS = [
+    { id: "shelf", name: "shelf", price: 0, incomeBonus: 0, image: "shelves/shelf.png", slotOffset: 0 },
+    { id: "workshop", name: "workshop", price: 25000, incomeBonus: .05, image: "shelves/workshop.png", slotOffset: 2 },
+    { id: "overgrown", name: "overgrown", price: 1000000, incomeBonus: .10, image: "shelves/overgrown.png", slotOffset: -8.2 },
+    { id: "arcane", name: "arcane", price: 50000000, incomeBonus: .15, image: "shelves/arcane.png", slotOffset: 3.8 },
+    { id: "cosmic", name: "cosmic", price: 1000000000, incomeBonus: .25, image: "shelves/cosmic.png", slotOffset: -1.6 }
+];
+
+/* ==================================================
+   elements & state
+================================================== */
+
+const stage = document.getElementById("stage");
+const balanceEl = document.getElementById("balance");
+const eternalKeysEl = document.getElementById("eternal-keys");
+const nextPrompt = document.getElementById("next-prompt");
+const shopButtons = document.querySelectorAll(".shop-buy");
+const shelfPreviewEl = document.getElementById("shelf-preview");
+const shelfPreviewSlotsEl = document.getElementById("shelf-preview-slots");
+const shelfIncomeEl = document.getElementById("shelf-income");
+
+let balance = Number(localStorage.getItem("boxed_balance")) || 0;
+let eternalKeys = Number(localStorage.getItem("boxed_eternal_keys")) || 0;
+let discoveredItems;
+let discoveredVariants;
+let displayedShelfItems;
+let ownedShelfSkins;
+let equippedShelfSkin;
+
+const DEFAULT_SETTINGS = {
+    muteMusic: false,
+    muteSounds: false,
+    musicVolume: .8,
+    soundVolume: 1,
+    reducedEffects: false
+};
+let appSettings = { ...DEFAULT_SETTINGS };
+try {
+    appSettings = { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem("boxed_settings")) || {}) };
+} catch (_) {}
+
+const DEFAULT_STATISTICS = {
+    boxesOpened: 0,
+    itemsPulled: 0,
+    moneyEarned: 0,
+    variantsPulled: 0,
+    keysFound: 0,
+    rarestPull: null
+};
+let statistics = { ...DEFAULT_STATISTICS };
+try {
+    statistics = { ...DEFAULT_STATISTICS, ...(JSON.parse(localStorage.getItem("boxed_statistics")) || {}) };
+} catch (_) {}
+
+function saveStatistics() {
+    localStorage.setItem("boxed_statistics", JSON.stringify(statistics));
+}
+
+function updateStatisticsDisplay() {
+    document.getElementById("stat-boxes").textContent = statistics.boxesOpened.toLocaleString();
+    document.getElementById("stat-items").textContent = statistics.itemsPulled.toLocaleString();
+    document.getElementById("stat-money").textContent = `$${statistics.moneyEarned.toLocaleString()}`;
+    document.getElementById("stat-variants").textContent = statistics.variantsPulled.toLocaleString();
+    document.getElementById("stat-keys").textContent = statistics.keysFound.toLocaleString();
+    document.getElementById("stat-discovered").textContent = discoveredItems.size.toLocaleString();
+
+    const rarest = statistics.rarestPull;
+    document.getElementById("stat-rarest").textContent = rarest?.name || "none yet";
+    document.getElementById("stat-rarest-odds").textContent = rarest
+        ? `about 1 in ${Math.max(1, Math.round(1 / rarest.chance)).toLocaleString()} per item • ${rarest.box}`
+        : "open a box to start tracking";
+}
+
+try {
+    discoveredItems = new Set(JSON.parse(localStorage.getItem("boxed_discovered_items")) || []);
+} catch (_) {
+    discoveredItems = new Set();
+}
+
+try {
+    discoveredVariants = new Set(JSON.parse(localStorage.getItem("boxed_discovered_variants")) || []);
+} catch (_) {
+    discoveredVariants = new Set();
+}
+
+for (const itemName of discoveredItems) {
+    discoveredVariants.add(`normal::${itemName}`);
+}
+localStorage.setItem("boxed_discovered_variants", JSON.stringify([...discoveredVariants]));
+
+try {
+    const savedShelf = JSON.parse(localStorage.getItem("boxed_display_shelf"));
+    displayedShelfItems = Array.from({ length: 5 }, (_, index) => {
+        if (!Array.isArray(savedShelf)) return null;
+        const entry = savedShelf[index];
+        if (typeof entry === "string") return { name: entry, variant: "normal" };
+        if (entry && typeof entry.name === "string") {
+            return { name: entry.name, variant: typeof entry.variant === "string" ? entry.variant : "normal" };
+        }
+        return null;
+    });
+} catch (_) {
+    displayedShelfItems = Array(5).fill(null);
+}
+
+// Preserve discoveries and shelf choices from the brief title-cased Larp item version.
+const LARP_NAME_MIGRATIONS = new Map([
+    ["C", "c"], ["Assembly", "assembly"], ["Zig", "zig"], ["C#", "c#"],
+    ["Rust", "rust"], ["Lua", "lua"], ["Python", "python"], ["Kotlin", "kotlin"],
+    ["Java", "java"], ["C++", "c++"]
+]);
+
+for (const [oldName, newName] of LARP_NAME_MIGRATIONS) {
+    if (discoveredItems.delete(oldName)) discoveredItems.add(newName);
+    for (const variant of VARIANTS) {
+        if (discoveredVariants.delete(`${variant.name}::${oldName}`)) {
+            discoveredVariants.add(`${variant.name}::${newName}`);
+        }
+    }
+}
+displayedShelfItems = displayedShelfItems.map(entry => entry
+    ? { ...entry, name: LARP_NAME_MIGRATIONS.get(entry.name) || entry.name }
+    : null);
+localStorage.setItem("boxed_discovered_items", JSON.stringify([...discoveredItems]));
+localStorage.setItem("boxed_discovered_variants", JSON.stringify([...discoveredVariants]));
+localStorage.setItem("boxed_display_shelf", JSON.stringify(displayedShelfItems));
+
+try {
+    ownedShelfSkins = new Set(JSON.parse(localStorage.getItem("boxed_owned_shelf_skins")) || []);
+} catch (_) {
+    ownedShelfSkins = new Set();
+}
+ownedShelfSkins.add("shelf");
+
+equippedShelfSkin = localStorage.getItem("boxed_equipped_shelf_skin") || "shelf";
+if (!SHELF_SKINS.some(skin => skin.id === equippedShelfSkin) || !ownedShelfSkins.has(equippedShelfSkin)) {
+    equippedShelfSkin = "shelf";
+}
+localStorage.setItem("boxed_owned_shelf_skins", JSON.stringify([...ownedShelfSkins]));
+localStorage.setItem("boxed_equipped_shelf_skin", equippedShelfSkin);
+
+const ETERNAL_KEY_CHANCES = {
+    cardboardbox: .012,
+    metalbox: .028,
+    supplycrate: .056,
+    staspod: .095,
+    chest: .14,
+    portal: .21,
+    container: .25,
+    luckyblock: .30,
+    eternalbox: .35
+};
+
+function updateBalanceDisplay() {
+    balanceEl.textContent = balance.toLocaleString();
+    localStorage.setItem("boxed_balance", balance);
+    updateShopButtonsState();
+    renderShelfSkinChoices();
+}
+
+function updateEternalKeysDisplay() {
+    eternalKeysEl.textContent = eternalKeys.toLocaleString();
+    localStorage.setItem("boxed_eternal_keys", eternalKeys);
+    updateShopButtonsState();
+}
+
+function markItemDiscovered(name) {
+    if (discoveredItems.has(name)) return;
+    discoveredItems.add(name);
+    localStorage.setItem("boxed_discovered_items", JSON.stringify([...discoveredItems]));
+}
+
+function markVariantDiscovered(itemName, variantName) {
+    const key = `${variantName}::${itemName}`;
+    if (discoveredVariants.has(key)) return;
+    discoveredVariants.add(key);
+    localStorage.setItem("boxed_discovered_variants", JSON.stringify([...discoveredVariants]));
+}
+
+/* ==================================================
+   display shelf
+================================================== */
+
+let shelfPhysics = [];
+let shelfSkinSwitching = false;
+
+function saveDisplayShelf() {
+    localStorage.setItem("boxed_display_shelf", JSON.stringify(displayedShelfItems));
+}
+
+function getShelfItem(name) {
+    return ITEMS.find(item => item.name === name) || null;
+}
+
+function applyItemNameColours(element, item) {
+    if (!item.nameColours) return;
+    element.style.setProperty("--fruit-colour-a", item.nameColours[0]);
+    element.style.setProperty("--fruit-colour-b", item.nameColours[1]);
+}
+
+function appendRaritySeparator(container, rarity) {
+    const separator = document.createElement("div");
+    separator.className = "rarity-separator";
+    separator.textContent = rarity;
+    container.appendChild(separator);
+}
+
+const RARITY_SORT_ORDER = {
+    common: 0,
+    uncommon: 1,
+    rare: 2,
+    epic: 3,
+    legendary: 4,
+    mythic: 5,
+    secret: 6,
+    fuwuds: 7,
+    eternal: 8
+};
+
+function sortByRarity(entries, getItem = entry => entry) {
+    return entries.map((entry, index) => ({ entry, index })).sort((a, b) => {
+        const itemA = getItem(a.entry);
+        const itemB = getItem(b.entry);
+        const rarityDifference = (RARITY_SORT_ORDER[itemA.rarity] ?? 999)
+            - (RARITY_SORT_ORDER[itemB.rarity] ?? 999);
+        if (rarityDifference !== 0) return rarityDifference;
+
+        const weightDifference = (itemB.weight ?? 0) - (itemA.weight ?? 0);
+        return weightDifference || a.index - b.index;
+    }).map(({ entry }) => entry);
+}
+
+function getEquippedShelfSkin() {
+    return SHELF_SKINS.find(skin => skin.id === equippedShelfSkin) || SHELF_SKINS[0];
+}
+
+function formatShelfPrice(price) {
+    return price === 0 ? "free" : `$${price.toLocaleString()}`;
+}
+
+async function buyOrEquipShelfSkin(skin) {
+    if (shelfSkinSwitching || skin.id === equippedShelfSkin) return;
+
+    if (!ownedShelfSkins.has(skin.id)) {
+        if (balance < skin.price) return;
+        balance -= skin.price;
+        ownedShelfSkins.add(skin.id);
+        localStorage.setItem("boxed_owned_shelf_skins", JSON.stringify([...ownedShelfSkins]));
+        updateBalanceDisplay();
+        playSound(moneySound, .55, random(.96, 1.04));
+    }
+
+    shelfSkinSwitching = true;
+    renderShelfSkinChoices();
+
+    const largeShelf = document.querySelector(".shelf-large");
+    if (largeShelf) {
+        const slideOut = largeShelf.animate([
+            { opacity: 1, transform: "translateX(0) rotate(0deg)" },
+            { opacity: 0, transform: "translateX(-115%) rotate(-1.5deg)" }
+        ], {
+            duration: 260,
+            easing: "cubic-bezier(.7,0,1,.45)",
+            fill: "forwards"
+        });
+        await slideOut.finished.catch(() => {});
+        slideOut.cancel();
+    }
+
+    equippedShelfSkin = skin.id;
+    localStorage.setItem("boxed_equipped_shelf_skin", equippedShelfSkin);
+    renderDisplayShelf();
+
+    const newShelfImage = document.querySelector(".shelf-large > .display-shelf-image");
+    const largeSlots = document.getElementById("shelf-large-slots");
+    const sprinkledItems = [...document.querySelectorAll(".shelf-large .shelf-display-item")];
+    sprinkledItems.forEach(item => { item.style.opacity = "0"; });
+    if (largeSlots) largeSlots.style.opacity = "0";
+
+    if (newShelfImage) {
+        playSound(wooshSound, .22, random(.96, 1.04));
+        const slideIn = newShelfImage.animate([
+            { opacity: 0, transform: "translateX(115%) rotate(1.8deg)" },
+            { opacity: 1, transform: "translateX(0) rotate(0deg)" }
+        ], {
+            duration: 390,
+            easing: "cubic-bezier(.12,.78,.2,1)",
+            fill: "both"
+        });
+        await slideIn.finished.catch(() => {});
+        slideIn.cancel();
+    }
+
+    if (largeSlots) largeSlots.style.opacity = "1";
+    sprinkledItems.forEach((item, index) => {
+        setTimeout(() => {
+            if (!item.isConnected) return;
+            const physics = shelfPhysics.find(entry => entry.element === item);
+            item.style.opacity = "1";
+            if (!physics) return;
+            physics.minY = -180;
+            physics.x = random(-9, 9);
+            physics.y = -random(70, 145);
+            physics.vx = random(-1.5, 1.5);
+            physics.vy = random(-1.4, .2);
+            physics.rotation = random(-15, 15);
+            physics.vr = random(-2.4, 2.4);
+        }, index * 78 + random(0, 45));
+    });
+
+    await new Promise(resolve => setTimeout(resolve, sprinkledItems.length * 78 + 520));
+    shelfSkinSwitching = false;
+    renderShelfSkinChoices();
+}
+
+function renderShelfSkinChoices() {
+    const list = document.getElementById("shelf-skin-list");
+    if (!list) return;
+    list.replaceChildren();
+
+    for (const skin of SHELF_SKINS) {
+        const owned = ownedShelfSkins.has(skin.id);
+        const equipped = equippedShelfSkin === skin.id;
+        const choice = document.createElement("button");
+        choice.type = "button";
+        choice.className = `shelf-skin-choice${equipped ? " equipped" : ""}`;
+        choice.disabled = shelfSkinSwitching || (!owned && balance < skin.price);
+
+        const image = document.createElement("img");
+        image.src = skin.image;
+        image.alt = "";
+        const name = document.createElement("div");
+        name.className = "shelf-skin-name";
+        name.textContent = skin.name;
+        const buff = document.createElement("div");
+        buff.className = "shelf-skin-buff";
+        buff.textContent = skin.incomeBonus > 0 ? `+${Math.round(skin.incomeBonus * 100)}% shelf income` : "base income";
+        const action = document.createElement("div");
+        action.className = "shelf-skin-action";
+        action.textContent = equipped ? "equipped" : owned ? "equip" : formatShelfPrice(skin.price);
+
+        choice.append(image, name, buff, action);
+        choice.addEventListener("click", () => buyOrEquipShelfSkin(skin));
+        list.appendChild(choice);
+    }
+}
+
+function closeShelfPicker() {
+    document.querySelector(".shelf-picker-backdrop")?.remove();
+}
+
+function closeVariantPicker() {
+    document.querySelector(".variant-picker-backdrop")?.remove();
+}
+
+function getOwnedVariants(item) {
+    return getVariantsForBox(item.pool || null)
+        .filter(variant => discoveredVariants.has(`${variant.name}::${item.name}`));
+}
+
+function placeShelfItem(slotIndex, item, variant) {
+    displayedShelfItems[slotIndex] = { name: item.name, variant: variant.name };
+    saveDisplayShelf();
+    closeVariantPicker();
+    closeShelfPicker();
+    renderDisplayShelf();
+}
+
+function openVariantPicker(slotIndex, item) {
+    closeVariantPicker();
+    const ownedVariants = getOwnedVariants(item);
+
+    if (ownedVariants.length <= 1) {
+        placeShelfItem(slotIndex, item, ownedVariants[0] || VARIANTS[0]);
+        return;
+    }
+
+    closeShelfPicker();
+    const backdrop = document.createElement("div");
+    backdrop.className = "variant-picker-backdrop";
+    const picker = document.createElement("section");
+    picker.className = "variant-picker";
+    picker.setAttribute("role", "dialog");
+    picker.setAttribute("aria-modal", "true");
+    picker.setAttribute("aria-label", "what variant?");
+
+    const title = document.createElement("div");
+    title.className = "variant-picker-title";
+    title.textContent = "what variant?";
+    const options = document.createElement("div");
+    options.className = "variant-picker-options";
+
+    for (const variant of getVariantsForBox(item.pool || null)) {
+        const choice = document.createElement("button");
+        choice.className = `variant-choice ${variant.name}`;
+        choice.type = "button";
+        choice.textContent = variant.name;
+        choice.disabled = !discoveredVariants.has(`${variant.name}::${item.name}`);
+        choice.addEventListener("click", () => placeShelfItem(slotIndex, item, variant));
+        options.appendChild(choice);
+    }
+
+    picker.append(title, options);
+    backdrop.appendChild(picker);
+    backdrop.addEventListener("pointerdown", event => {
+        if (event.target === backdrop) closeVariantPicker();
+    });
+    document.body.appendChild(backdrop);
+    options.querySelector("button:not(:disabled)")?.focus();
+}
+
+function closeShelfView() {
+    const backdrop = document.querySelector(".shelf-view-backdrop");
+    if (!backdrop || backdrop.classList.contains("closing")) return;
+    backdrop.classList.add("closing");
+
+    const finishClose = () => {
+        if (!backdrop.isConnected) return;
+        backdrop.remove();
+        renderDisplayShelf();
+    };
+
+    backdrop.addEventListener("animationend", event => {
+        if (event.target === backdrop) finishClose();
+    }, { once: true });
+    setTimeout(finishClose, 260);
+}
+
+function openShelfView() {
+    if (document.querySelector(".shelf-view-backdrop")) return;
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "shelf-view-backdrop";
+    const panel = document.createElement("div");
+    panel.className = "shelf-view-panel";
+    const shelf = document.createElement("div");
+    shelf.className = "shelf-large";
+
+    const image = document.createElement("img");
+    image.className = "display-shelf-image";
+    image.src = getEquippedShelfSkin().image;
+    image.alt = "";
+    const slots = document.createElement("div");
+    slots.id = "shelf-large-slots";
+    slots.className = "shelf-slots";
+    const skinShop = document.createElement("section");
+    skinShop.className = "shelf-skin-shop";
+    const skinTitle = document.createElement("div");
+    skinTitle.className = "shelf-skin-title";
+    skinTitle.textContent = "shelf skins";
+    const skinList = document.createElement("div");
+    skinList.id = "shelf-skin-list";
+    skinList.className = "shelf-skin-list";
+
+    shelf.append(image, slots);
+    skinShop.append(skinTitle, skinList);
+    panel.append(shelf, skinShop);
+    backdrop.appendChild(panel);
+
+    backdrop.addEventListener("pointerdown", event => {
+        if (event.target === backdrop) closeShelfView();
+    });
+    panel.addEventListener("pointerdown", event => event.stopPropagation());
+    document.body.appendChild(backdrop);
+    renderDisplayShelf();
+    renderShelfSkinChoices();
+}
+
+shelfPreviewEl.addEventListener("click", event => {
+    if (!event.target.closest("button")) openShelfView();
+});
+
+function openShelfPicker(slotIndex) {
+    closeShelfPicker();
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "shelf-picker-backdrop";
+
+    const picker = document.createElement("section");
+    picker.className = "shelf-picker";
+    picker.setAttribute("role", "dialog");
+    picker.setAttribute("aria-modal", "true");
+    picker.setAttribute("aria-label", "choose a shelf item");
+
+    const header = document.createElement("div");
+    header.className = "shelf-picker-header";
+    const title = document.createElement("div");
+    title.className = "shelf-picker-title";
+    title.textContent = "choose an item";
+    const close = document.createElement("button");
+    close.className = "shelf-picker-close";
+    close.type = "button";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "close");
+    close.addEventListener("click", closeShelfPicker);
+    header.append(title, close);
+
+    const grid = document.createElement("div");
+    grid.className = "shelf-picker-grid";
+    const available = sortByRarity(ITEMS.filter(item => discoveredItems.has(item.name)));
+
+    if (available.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "shelf-picker-empty";
+        empty.textContent = "discover an item before putting it here";
+        grid.appendChild(empty);
+    } else {
+        let lastRarity = null;
+        for (const item of available) {
+            if (item.rarity !== lastRarity) {
+                appendRaritySeparator(grid, item.rarity);
+                lastRarity = item.rarity;
+            }
+            const choice = document.createElement("button");
+            choice.className = "shelf-choice";
+            choice.type = "button";
+            choice.disabled = displayedShelfItems.some((entry, index) => entry?.name === item.name && index !== slotIndex);
+
+            const image = document.createElement("img");
+            image.src = item.revealImage || item.image;
+            image.alt = "";
+            const name = document.createElement("div");
+            name.className = `shelf-choice-name rarity-${item.rarity}`;
+            name.textContent = item.name;
+            applyItemNameColours(name, item);
+            choice.append(image, name);
+
+            choice.addEventListener("click", () => {
+                openVariantPicker(slotIndex, item);
+            });
+            grid.appendChild(choice);
+        }
+    }
+
+    picker.append(header, grid);
+    backdrop.appendChild(picker);
+    backdrop.addEventListener("pointerdown", event => {
+        if (event.target === backdrop) closeShelfPicker();
+    });
+    document.body.appendChild(backdrop);
+    close.focus();
+}
+
+function renderShelfSlots(shelfSlotsEl) {
+    shelfSlotsEl.replaceChildren();
+
+    displayedShelfItems.forEach((displayEntry, slotIndex) => {
+        const slot = document.createElement("div");
+        slot.className = "shelf-slot";
+        const itemData = getShelfItem(displayEntry?.name);
+
+        if (!itemData) {
+            const add = document.createElement("button");
+            add.className = "shelf-add";
+            add.type = "button";
+            add.textContent = "+";
+            add.setAttribute("aria-label", `choose item for shelf slot ${slotIndex + 1}`);
+            add.addEventListener("pointerdown", event => event.stopPropagation());
+            add.addEventListener("click", event => {
+                event.stopPropagation();
+                openShelfPicker(slotIndex);
+            });
+            slot.appendChild(add);
+        } else {
+            const variant = VARIANTS.find(entry => entry.name === displayEntry.variant) || VARIANTS[0];
+            const wrap = document.createElement("div");
+            wrap.className = `shelf-display-wrap ${variant.name}`;
+            const image = document.createElement("img");
+            image.className = "shelf-display-item";
+            image.src = itemData.revealImage || itemData.image;
+            image.alt = itemData.name;
+            image.title = itemData.name;
+
+            const physics = { element: image, x: 0, y: 0, vx: 0, vy: 0, rotation: 0, vr: 0, minY: -28 };
+            shelfPhysics.push(physics);
+
+            image.addEventListener("pointerdown", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                playSound(toySound, .55, random(.88, 1.12));
+                const rect = image.getBoundingClientRect();
+                let direction = (event.clientX - (rect.left + rect.width / 2)) / Math.max(1, rect.width / 2);
+                if (Math.abs(direction) < .16) direction = Math.random() < .5 ? -1 : 1;
+                physics.vx += direction * 1.7;
+                physics.vy -= random(2.5, 3.4);
+                physics.vr += direction * 2.8 + random(-.55, .55);
+            });
+
+            const remove = document.createElement("button");
+            remove.className = "shelf-remove";
+            remove.type = "button";
+            remove.textContent = "×";
+            remove.setAttribute("aria-label", `remove ${itemData.name} from shelf`);
+            remove.addEventListener("pointerdown", event => event.stopPropagation());
+            remove.addEventListener("click", event => {
+                event.stopPropagation();
+                displayedShelfItems[slotIndex] = null;
+                saveDisplayShelf();
+                renderDisplayShelf();
+            });
+
+            wrap.append(image, remove);
+            slot.appendChild(wrap);
+        }
+
+        shelfSlotsEl.appendChild(slot);
+    });
+}
+
+function getShelfPassiveIncome() {
+    const totalValue = displayedShelfItems.reduce((total, entry) => {
+        const item = getShelfItem(entry?.name);
+        const variant = VARIANTS.find(option => option.name === entry?.variant) || VARIANTS[0];
+        return total + (item ? item.value * variant.multiplier : 0);
+    }, 0);
+    return Math.round(totalValue / 10 * (1 + getEquippedShelfSkin().incomeBonus));
+}
+
+function renderDisplayShelf() {
+    shelfPhysics = [];
+    displayedShelfItems = displayedShelfItems.map(entry => {
+        const item = getShelfItem(entry?.name);
+        if (!item || !discoveredItems.has(item.name)) return null;
+        const requestedVariant = VARIANTS.find(variant => variant.name === entry?.variant) || VARIANTS[0];
+        const variant = discoveredVariants.has(`${requestedVariant.name}::${item.name}`)
+            ? requestedVariant
+            : VARIANTS[0];
+        return { name: item.name, variant: variant.name };
+    });
+    saveDisplayShelf();
+
+    const shelfSkin = getEquippedShelfSkin();
+    document.querySelectorAll(".display-shelf-image").forEach(image => {
+        image.src = shelfSkin.image;
+    });
+    document.querySelectorAll(".shelf-preview, .shelf-large").forEach(shelf => {
+        shelf.style.setProperty("--shelf-slot-offset", `${shelfSkin.slotOffset}%`);
+    });
+
+    renderShelfSlots(shelfPreviewSlotsEl);
+    const largeSlots = document.getElementById("shelf-large-slots");
+    if (largeSlots) renderShelfSlots(largeSlots);
+    shelfIncomeEl.textContent = `+$${getShelfPassiveIncome().toLocaleString()} / 5s`;
+}
+
+function updateShelfPhysics() {
+    for (const physics of shelfPhysics) {
+        if (!physics.element.isConnected) continue;
+
+        physics.vy += .22;
+        physics.vx += -physics.x * .018;
+        physics.vr += -physics.rotation * .024;
+        physics.vx *= .93;
+        physics.vy *= .985;
+        physics.vr *= .935;
+        physics.x += physics.vx;
+        physics.y += physics.vy;
+        physics.rotation += physics.vr;
+
+        if (physics.y > 0) {
+            physics.y = 0;
+            if (physics.vy > .35) physics.vy *= -.32;
+            else physics.vy = 0;
+        }
+
+        physics.x = Math.max(-18, Math.min(18, physics.x));
+        physics.y = Math.max(physics.minY, physics.y);
+        physics.rotation = Math.max(-18, Math.min(18, physics.rotation));
+        physics.element.style.transform = `translate3d(${physics.x}px, ${physics.y}px, 0) rotate(${physics.rotation}deg)`;
+    }
+    requestAnimationFrame(updateShelfPhysics);
+}
+
+renderDisplayShelf();
+requestAnimationFrame(updateShelfPhysics);
+
+setInterval(() => {
+    const passiveIncome = getShelfPassiveIncome();
+    if (passiveIncome <= 0) return;
+    balance += passiveIncome;
+    updateBalanceDisplay();
+}, 5000);
+
+let activeBox = null;
+let activeItems = [];
+let isEntering = false;
+let isOpeningAnimation = false;
+let isRewardAnimation = false;
+let opening = false;
+let clearing = false;
+
+let currentBoxType = null;
+let currentLuck = 1;
+let currentVariantMult = 1;
+let currentMinItems = 1;
+let currentMaxItems = 3;
+let currentBoxVariant = null;
+
+let mouseX = 0;
+let mouseY = 0;
+let audioStarted = false;
+let shadowAudioContext = null;
+
+/* ==================================================
+   audio
+================================================== */
+
+const openSound = new Audio("sounds/openbox.wav");
+const wooshSound = new Audio("sounds/woosh.wav");
+const musicSound = new Audio("sounds/music.wav");
+const completeSound = new Audio("sounds/boxcomplete.wav");
+const moneySound = new Audio("sounds/money.wav");
+const glassSound = new Audio("sounds/glass.wav");
+const toySound = new Audio("sounds/toy.wav");
+
+let shadowRevealQueue = Promise.resolve();
+
+musicSound.loop = true;
+
+function playSound(sound, volume = 1, pitch = 1) {
+    if (appSettings.muteSounds || appSettings.soundVolume <= 0) return;
+    const clone = sound.cloneNode(true);
+    clone.volume = Math.min(1, volume * appSettings.soundVolume);
+    if (typeof clone.preservesPitch !== "undefined") clone.preservesPitch = false;
+    if (typeof clone.mozPreservesPitch !== "undefined") clone.mozPreservesPitch = false;
+    clone.playbackRate = pitch;
+    clone.play().catch(() => {});
+}
+
+function startMusic() {
+    if (audioStarted) return;
+    audioStarted = true;
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass && !shadowAudioContext) {
+        shadowAudioContext = new AudioContextClass();
+        shadowAudioContext.resume().catch(() => {});
+    }
+
+    syncMusicSettings();
+}
+
+function saveSettings() {
+    localStorage.setItem("boxed_settings", JSON.stringify(appSettings));
+}
+
+function syncMusicSettings() {
+    musicSound.volume = Math.min(1, .10 * appSettings.musicVolume);
+    if (appSettings.muteMusic || appSettings.musicVolume <= 0) {
+        musicSound.pause();
+    } else if (audioStarted) {
+        musicSound.play().catch(() => {});
+    }
+}
+
+function applySettings() {
+    document.body.classList.toggle("reduced-effects", appSettings.reducedEffects);
+    document.getElementById("mute-music").checked = appSettings.muteMusic;
+    document.getElementById("music-volume").value = Math.round(appSettings.musicVolume * 100);
+    document.getElementById("mute-sounds").checked = appSettings.muteSounds;
+    document.getElementById("sound-volume").value = Math.round(appSettings.soundVolume * 100);
+    document.getElementById("reduced-effects").checked = appSettings.reducedEffects;
+    syncMusicSettings();
+}
+
+function closeUtilityModal(id) {
+    document.getElementById(id).hidden = true;
+}
+
+function openUtilityModal(id) {
+    document.getElementById(id).hidden = false;
+}
+
+document.getElementById("settings-button").addEventListener("click", () => openUtilityModal("settings-backdrop"));
+document.getElementById("statistics-open").addEventListener("click", () => {
+    closeUtilityModal("settings-backdrop");
+    updateStatisticsDisplay();
+    openUtilityModal("statistics-backdrop");
+});
+document.querySelectorAll(".utility-close").forEach(button => {
+    button.addEventListener("click", () => closeUtilityModal(button.dataset.close));
+});
+document.querySelectorAll(".utility-backdrop").forEach(backdrop => {
+    backdrop.addEventListener("pointerdown", event => {
+        if (event.target === backdrop) backdrop.hidden = true;
+    });
+});
+document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    document.querySelectorAll(".utility-backdrop:not([hidden])").forEach(backdrop => {
+        backdrop.hidden = true;
+    });
+});
+
+document.getElementById("mute-music").addEventListener("change", event => {
+    appSettings.muteMusic = event.target.checked;
+    saveSettings();
+    syncMusicSettings();
+});
+document.getElementById("music-volume").addEventListener("input", event => {
+    appSettings.musicVolume = Number(event.target.value) / 100;
+    saveSettings();
+    syncMusicSettings();
+});
+document.getElementById("mute-sounds").addEventListener("change", event => {
+    appSettings.muteSounds = event.target.checked;
+    saveSettings();
+});
+document.getElementById("sound-volume").addEventListener("input", event => {
+    appSettings.soundVolume = Number(event.target.value) / 100;
+    saveSettings();
+});
+document.getElementById("reduced-effects").addEventListener("change", event => {
+    appSettings.reducedEffects = event.target.checked;
+    saveSettings();
+    applySettings();
+});
+
+applySettings();
+
+document.addEventListener("pointerdown", startMusic, { once: true });
+
+function random(min, max) { return Math.random() * (max - min) + min; }
+function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
+
+/* ==================================================
+   rolls & utils
+================================================== */
+
+function getItemWeights(luck = 1, boxType = null) {
+    const itemPool = boxType === "larpbox"
+        ? ITEMS.filter(item => item.pool === "larpbox")
+        : ITEMS.filter(item => !item.pool);
+
+    // Early boxes keep their original gentle curve. Beyond supply-crate luck,
+    // rarity weights scale meaningfully so expensive boxes are real upgrades.
+    if (luck > 4) {
+        const advancedLuckPower = {
+            common: 0,
+            uncommon: .30,
+            rare: .70,
+            epic: 1.10,
+            legendary: 1.60,
+            mythic: 1.90,
+            secret: 1.60,
+            fuwuds: 1.60
+        };
+
+        return itemPool.map(item => ({
+            item,
+            weight: item.weight * Math.pow(luck, advancedLuckPower[item.rarity] || 0)
+        }));
+    }
+
+    const rarityLuck = {
+        common: 0,
+        uncommon: .08,
+        rare: .18,
+        epic: .32,
+        legendary: .50,
+        mythic: .70,
+        secret: .85,
+        fuwuds: .85
+    };
+    const luckStrength = Math.log2(Math.max(1, luck));
+    return itemPool.map(item => ({
+        item,
+        weight: item.weight * (1 + luckStrength * (rarityLuck[item.rarity] || 0))
+    }));
+}
+
+function weightedItem(luck = 1, boxType = null) {
+    const weights = getItemWeights(luck, boxType);
+    const total = weights.reduce((sum, entry) => sum + entry.weight, 0);
+    let roll = Math.random() * total;
+    for (const entry of weights) {
+        roll -= entry.weight;
+        if (roll <= 0) return entry.item;
+    }
+    return weights.at(-1)?.item || ITEMS[0];
+}
+
+function getVariantsForBox(boxType = null) {
+    return VARIANTS.filter(variant => !variant.boxOnly || variant.boxOnly === boxType);
+}
+
+function rollVariant(variantMult = 1, scaleChance = 1, boxType = null) {
+    const weighted = getVariantWeights(variantMult, scaleChance, boxType);
+
+    const total = weighted.reduce((sum, entry) => sum + entry.weight, 0);
+    let roll = Math.random() * total;
+    for (const entry of weighted) {
+        roll -= entry.weight;
+        if (roll <= 0) return entry.variant;
+    }
+    return VARIANTS[0];
+}
+
+function getVariantWeights(variantMult = 1, scaleChance = 1, boxType = null) {
+    return getVariantsForBox(boxType).map((variant, index) => {
+        const mult = index === 0 ? 1 : variantMult;
+        return {
+            variant,
+            weight: variant.chance * mult * (index === 0 ? 1 : scaleChance)
+        };
+    });
+}
+
+function recordPullStatistics(item, variant) {
+    const itemWeights = getItemWeights(currentLuck, currentBoxType);
+    const totalItemWeight = itemWeights.reduce((sum, entry) => sum + entry.weight, 0);
+    const itemEntry = itemWeights.find(entry => entry.item === item);
+    if (!itemEntry || totalItemWeight <= 0) return;
+
+    const boxVariantWeights = getVariantWeights(currentVariantMult, 2 / 3, currentBoxType);
+    const totalBoxVariantWeight = boxVariantWeights.reduce((sum, entry) => sum + entry.weight, 0);
+    const rolledBoxVariant = boxVariantWeights.find(entry => entry.variant.name === currentBoxVariant?.name);
+    const boxVariantChance = rolledBoxVariant ? rolledBoxVariant.weight / totalBoxVariantWeight : 1;
+
+    let combinedChance = itemEntry.weight / totalItemWeight * boxVariantChance;
+    if (!currentBoxVariant || currentBoxVariant.name === "normal") {
+        const itemVariantWeights = getVariantWeights(currentVariantMult, 1, currentBoxType);
+        const totalItemVariantWeight = itemVariantWeights.reduce((sum, entry) => sum + entry.weight, 0);
+        const itemVariant = itemVariantWeights.find(entry => entry.variant.name === variant.name);
+        combinedChance *= itemVariant ? itemVariant.weight / totalItemVariantWeight : 1;
+    }
+
+    const existingChance = statistics.rarestPull?.chance ?? Infinity;
+    if (combinedChance > 0 && combinedChance < existingChance) {
+        const boxName = document.querySelector(`.shop-buy[data-box="${currentBoxType}"]`)
+            ?.closest(".shop-entry")?.querySelector(".shop-name")?.textContent || currentBoxType;
+        const prefix = variant.name === "normal" ? "" : `${variant.name} `;
+        statistics.rarestPull = {
+            name: `${prefix}${item.name}`,
+            chance: combinedChance,
+            box: boxName
+        };
+    }
+}
+
+function getPitch() { return Math.pow(2, random(-2, 2) / 12); }
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function getSoundDuration(sound, fallbackSeconds = 6) {
+    if (Number.isFinite(sound.duration) && sound.duration > 0) return sound.duration;
+
+    sound.load();
+    await Promise.race([
+        new Promise(resolve => sound.addEventListener("loadedmetadata", resolve, { once: true })),
+        wait(1500)
+    ]);
+
+    return Number.isFinite(sound.duration) && sound.duration > 0
+        ? sound.duration
+        : fallbackSeconds;
+}
+
+function queueShadowRevealCutscene(itemImage, revealSource) {
+    const runReveal = async () => {
+        if (!itemImage.isConnected) return;
+
+        await wait(300);
+
+        const sound = shadowSound.cloneNode(true);
+        sound.volume = .9;
+        const durationSeconds = await getSoundDuration(sound);
+        const durationMs = Math.max(1800, durationSeconds * 1000);
+
+        const overlay = document.createElement("div");
+        overlay.className = "shadow-reveal";
+
+        const imageShell = document.createElement("div");
+        imageShell.className = "shadow-reveal-image-shell";
+
+        const revealImage = document.createElement("img");
+        revealImage.className = "shadow-reveal-image";
+        revealImage.src = "assets/mystery.png";
+        imageShell.appendChild(revealImage);
+
+        for (let i = 0; i < 16; i++) {
+            const shard = document.createElement("span");
+            const angle = i / 16 * Math.PI * 2;
+            const distance = 190 + (i % 4) * 48;
+            shard.className = "shadow-shard";
+            shard.style.setProperty("--shard-x", `${Math.cos(angle) * distance}px`);
+            shard.style.setProperty("--shard-y", `${Math.sin(angle) * distance}px`);
+            shard.style.setProperty("--shard-angle", `${i * 47}deg`);
+            shard.style.setProperty("--shard-delay", `${(i % 5) * 12}ms`);
+            imageShell.appendChild(shard);
+        }
+
+        overlay.appendChild(imageShell);
+        document.body.appendChild(overlay);
+
+        let audioContext = null;
+        let analyser = null;
+        let frequencyData = null;
+        let analysisSound = null;
+        let pulseFrame = 0;
+
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                audioContext = shadowAudioContext || new AudioContextClass();
+                shadowAudioContext = audioContext;
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                analyser.smoothingTimeConstant = .62;
+                frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+                // Analyse a separate copy. Routing the audible element through
+                // Web Audio can mute it when a local browser suspends the context.
+                analysisSound = shadowSound.cloneNode(true);
+                analysisSound.volume = 1;
+                const source = audioContext.createMediaElementSource(analysisSound);
+                const silentOutput = audioContext.createGain();
+                silentOutput.gain.value = 0;
+                source.connect(analyser);
+                analyser.connect(silentOutput);
+                silentOutput.connect(audioContext.destination);
+                audioContext.resume().catch(() => {});
+            }
+        } catch (_) {
+            analyser = null;
+            analysisSound = null;
+        }
+
+        // This element remains on the browser's normal audio path, so the
+        // cutscene sound is never dependent on Web Audio analyser support.
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+        const playbackStartedAt = performance.now();
+        if (analysisSound) {
+            analysisSound.currentTime = 0;
+            analysisSound.play().catch(() => {
+                analyser = null;
+                frequencyData = null;
+            });
+        }
+
+        // Break 0.2 seconds sooner than the original build timing.
+        const buildDuration = Math.min(3000, Math.max(1600, durationMs * .34 - 200));
+        const shakeFrames = [];
+        const shakeSteps = 30;
+        for (let i = 0; i <= shakeSteps; i++) {
+            const progress = i / shakeSteps;
+            const force = .5 + progress * progress * 15;
+            shakeFrames.push({
+                offset: progress,
+                transform: `translate3d(${Math.sin(i * 2.7) * force}px, ${Math.cos(i * 3.9) * force * .72}px, 0) rotate(${Math.sin(i * 4.6) * force * .18}deg) scale(${1 + progress * .045})`,
+                filter: `drop-shadow(0 0 ${8 + progress * 30}px rgba(187,215,255,${.2 + progress * .7})) brightness(${1 + progress * .4})`
+            });
+        }
+
+        const mysteryBuild = revealImage.animate(shakeFrames, {
+            duration: buildDuration,
+            easing: "steps(1, end)",
+            fill: "forwards"
+        });
+
+        await mysteryBuild.finished.catch(() => {});
+        overlay.classList.add("crashing");
+        await wait(240);
+        revealImage.src = revealSource;
+        itemImage.src = revealSource;
+        itemImage.parentElement?.style.setProperty("--rainbow-mask", `url("${itemImage.src}")`);
+        mysteryBuild.cancel();
+        revealImage.style.animation = "shadowRevealSlam .28s steps(3, end)";
+        overlay.classList.add("revealed");
+        await wait(280);
+
+        let bassPeak = .16;
+        let smoothedPulse = 0;
+
+        const pulseToBass = () => {
+            if (!overlay.isConnected || overlay.classList.contains("fading")) return;
+
+            let pulse;
+            if (analyser && frequencyData && audioContext.state === "running") {
+                analyser.getByteFrequencyData(frequencyData);
+                const bassHz = 180;
+                const bassBins = Math.max(
+                    2,
+                    Math.min(frequencyData.length, Math.ceil(bassHz / (audioContext.sampleRate / analyser.fftSize)))
+                );
+                let bassTotal = 0;
+                for (let i = 1; i < bassBins; i++) bassTotal += frequencyData[i];
+                const bass = bassTotal / ((bassBins - 1) * 255);
+                bassPeak = Math.max(bass, bassPeak * .985);
+                const normalizedBass = Math.min(1, bass / Math.max(.08, bassPeak));
+                const targetPulse = Math.max(0, (normalizedBass - .18) / .82) * .20;
+                smoothedPulse += (targetPulse - smoothedPulse) * .72;
+                pulse = Math.round(smoothedPulse * 100) / 100;
+            } else {
+                pulse = Math.max(0, Math.sin(performance.now() * .014)) * .07;
+            }
+
+            revealImage.style.transform = `scale(${1 + pulse})`;
+            revealImage.style.filter = `drop-shadow(0 0 ${18 + pulse * 130}px rgba(151,92,255,.82)) drop-shadow(0 18px 25px rgba(0,0,0,.8)) brightness(${1 + pulse * .9})`;
+            pulseFrame = requestAnimationFrame(pulseToBass);
+        };
+
+        pulseToBass();
+        const elapsed = performance.now() - playbackStartedAt;
+        await wait(Math.max(900, durationMs - elapsed - 600));
+        overlay.classList.add("fading");
+        cancelAnimationFrame(pulseFrame);
+        if (analysisSound) {
+            analysisSound.pause();
+            analysisSound.removeAttribute("src");
+            analysisSound.load();
+        }
+        await wait(600);
+        overlay.remove();
+    };
+
+    const queued = shadowRevealQueue.then(runReveal, runReveal);
+    shadowRevealQueue = queued.catch(() => {});
+    return queued;
+}
+
+function queueShadowReveal(itemImage, revealSource) {
+    const runReveal = async () => {
+        if (!itemImage.isConnected) return;
+
+        const item = itemImage.parentElement;
+        const shake = itemImage.animate([
+            { transform: "translate(0,0) rotate(0deg)" },
+            { transform: "translate(-2px,1px) rotate(-1deg)" },
+            { transform: "translate(3px,-2px) rotate(1.5deg)" },
+            { transform: "translate(-5px,3px) rotate(-2deg)" },
+            { transform: "translate(6px,-4px) rotate(2.5deg)" },
+            { transform: "translate(-7px,2px) rotate(-3deg)" }
+        ], {
+            duration: 260,
+            easing: "steps(1, end)",
+            fill: "forwards"
+        });
+
+        await shake.finished.catch(() => {});
+        shake.cancel();
+        if (!itemImage.isConnected) return;
+
+        playSound(glassSound, .9, random(1.88, 2.12));
+        item.classList.add("shadow-breaking");
+
+        for (let i = 0; i < 10; i++) {
+            const shard = document.createElement("span");
+            const angle = i / 10 * Math.PI * 2;
+            const distance = 42 + (i % 3) * 10;
+            shard.className = "shadow-item-shard";
+            shard.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
+            shard.style.setProperty("--y", `${Math.sin(angle) * distance}px`);
+            shard.style.setProperty("--angle", `${i * 53}deg`);
+            item.appendChild(shard);
+        }
+
+        await wait(90);
+        itemImage.src = revealSource;
+        item.classList.remove("secret-unrevealed");
+        itemImage.animate([
+            { opacity: 0, transform: "scale(.72)" },
+            { opacity: 1, transform: "scale(1.08)" },
+            { opacity: 1, transform: "scale(1)" }
+        ], { duration: 250, easing: "steps(3, end)" });
+
+        await wait(430);
+        item.classList.remove("shadow-breaking");
+        item.querySelectorAll(".shadow-item-shard").forEach(shard => shard.remove());
+    };
+
+    const queued = shadowRevealQueue.then(runReveal, runReveal);
+    shadowRevealQueue = queued.catch(() => {});
+    return queued;
+}
+
+function queueFuwudsReveal(itemImage, revealSource) {
+    const runReveal = async () => {
+        if (!itemImage.isConnected) return;
+
+        const item = itemImage.parentElement;
+        itemImage.src = "assets/mysteryfruit.png";
+        item.style.setProperty("--rainbow-mask", `url("${itemImage.src}")`);
+        playSound(openSound, .55, random(1.18, 1.34));
+        const rattle = itemImage.animate([
+            { transform: "translate(0,0) rotate(0deg)" },
+            { transform: "translate(-3px,-1px) rotate(-2.4deg)" },
+            { transform: "translate(4px,1px) rotate(2.8deg)" },
+            { transform: "translate(-3px,0) rotate(-2.1deg)" },
+            { transform: "translate(3px,1px) rotate(1.8deg)" },
+            { transform: "translate(-2px,0) rotate(-1.2deg)" },
+            { transform: "translate(1px,0) rotate(.75deg)" },
+            { transform: "translate(0,0) rotate(0deg)" }
+        ], {
+            duration: 520,
+            easing: "cubic-bezier(.4,.05,.6,.95)",
+            fill: "forwards"
+        });
+
+        await rattle.finished.catch(() => {});
+        rattle.cancel();
+        if (!itemImage.isConnected) return;
+
+        itemImage.src = "assets/mysteryfruitopen.png";
+        item.style.setProperty("--rainbow-mask", `url("${itemImage.src}")`);
+        itemImage.animate([
+            { transform: "scale(1) translateY(0)" },
+            { transform: "scale(1.035) translateY(-3px)" },
+            { transform: "scale(1) translateY(0)" }
+        ], { duration: 200, easing: "cubic-bezier(.2,.8,.2,1)" });
+
+        await wait(90);
+        const fruitImage = document.createElement("img");
+        fruitImage.className = "item-image fuwuds-pop-item";
+        fruitImage.src = revealSource;
+        fruitImage.alt = "";
+        item.appendChild(fruitImage);
+
+        const fruitPop = fruitImage.animate([
+            { opacity: 0, transform: "translateY(25px) rotate(-8deg) scale(.18)" },
+            { opacity: 1, transform: "translateY(-27px) rotate(5deg) scale(1.12)", offset: .58 },
+            { opacity: 1, transform: "translateY(-7px) rotate(-2deg) scale(.96)", offset: .78 },
+            { opacity: 1, transform: "translateY(0) rotate(0deg) scale(1)" }
+        ], {
+            duration: 520,
+            easing: "cubic-bezier(.2,.75,.22,1)",
+            fill: "forwards"
+        });
+
+        await wait(260);
+        const boxFade = itemImage.animate([
+            { opacity: 1, transform: "translateY(0) scale(1)" },
+            { opacity: 0, transform: "translateY(15px) scale(.76)" }
+        ], { duration: 230, easing: "steps(4, end)", fill: "forwards" });
+
+        await fruitPop.finished.catch(() => {});
+        if (!itemImage.isConnected) return;
+        boxFade.cancel();
+        itemImage.src = revealSource;
+        itemImage.style.opacity = "1";
+        itemImage.style.transform = "";
+        item.style.setProperty("--rainbow-mask", `url("${itemImage.src}")`);
+        fruitImage.remove();
+        item.classList.remove("fuwuds-unrevealed");
+    };
+
+    const queued = shadowRevealQueue.then(runReveal, runReveal);
+    shadowRevealQueue = queued.catch(() => {});
+    return queued;
+}
+
+function addMoney(amount, x, y) {
+    balance += amount;
+    statistics.moneyEarned += amount;
+    saveStatistics();
+    updateBalanceDisplay();
+    playSound(moneySound, .65, getPitch());
+
+    const pop = document.createElement("div");
+    pop.className = "money-pop";
+    pop.textContent = `+$${amount.toLocaleString()}`;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y}px`;
+    stage.appendChild(pop);
+    setTimeout(() => pop.remove(), 950);
+}
+
+function formatProbability(percent) {
+    if (percent >= 10) return `${percent.toFixed(1)}%`;
+    if (percent >= 1) return `${percent.toFixed(2)}%`;
+    if (percent >= .1) return `${percent.toFixed(3)}%`;
+    return `${percent.toFixed(4)}%`;
+}
+
+function closeProbabilityModal() {
+    document.querySelector(".probability-backdrop")?.remove();
+}
+
+function openProbabilityModal(button, entry) {
+    closeProbabilityModal();
+
+    const luck = Number(button.dataset.luck);
+    const minItems = Number(button.dataset.minItems || 1);
+    const maxItems = Number(button.dataset.maxItems || 3);
+    const boxType = button.dataset.box;
+    const variantMult = Number(button.dataset.variantMult || 1);
+    const boxName = entry.querySelector(".shop-name").textContent;
+    const weights = getItemWeights(luck, boxType);
+    const totalWeight = weights.reduce((sum, reward) => sum + reward.weight, 0);
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "probability-backdrop";
+
+    const modal = document.createElement("section");
+    modal.className = "probability-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-label", `${boxName} probabilities`);
+
+    const header = document.createElement("div");
+    header.className = "probability-header";
+
+    const heading = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "probability-title";
+    title.textContent = boxName;
+    const subtitle = document.createElement("div");
+    subtitle.className = "probability-subtitle";
+    subtitle.textContent = `chance per item • ${minItems}–${maxItems} items per box`;
+    heading.append(title, subtitle);
+
+    const close = document.createElement("button");
+    close.className = "probability-close";
+    close.type = "button";
+    close.textContent = "×";
+    close.setAttribute("aria-label", "close");
+    close.addEventListener("click", closeProbabilityModal);
+    header.append(heading, close);
+
+    const grid = document.createElement("div");
+    grid.className = "probability-grid";
+
+    let lastRarity = null;
+    for (const reward of sortByRarity(weights, entry => entry.item)) {
+        if (reward.item.rarity !== lastRarity) {
+            appendRaritySeparator(grid, reward.item.rarity);
+            lastRarity = reward.item.rarity;
+        }
+        const card = document.createElement("div");
+        card.className = "probability-item";
+
+        const image = document.createElement("img");
+        image.className = "probability-item-image";
+        image.src = reward.item.revealImage || reward.item.image;
+        image.alt = "";
+        if (!discoveredItems.has(reward.item.name)) image.classList.add("unknown");
+
+        const name = document.createElement("div");
+        name.className = `probability-item-name rarity-${reward.item.rarity}`;
+        name.textContent = reward.item.name;
+        applyItemNameColours(name, reward.item);
+
+        const chance = document.createElement("div");
+        chance.className = "probability-item-chance";
+        chance.textContent = formatProbability(reward.weight / totalWeight * 100);
+        card.append(image, name, chance);
+        grid.appendChild(card);
+    }
+
+    const keyChance = ETERNAL_KEY_CHANCES[boxType] || 0;
+    if (keyChance > 0) {
+        const card = document.createElement("div");
+        card.className = "probability-item bonus";
+
+        const image = document.createElement("img");
+        image.className = "probability-item-image";
+        image.src = "items/eternalkey.png";
+        image.alt = "";
+        if (!discoveredItems.has("eternal key")) image.classList.add("unknown");
+
+        const name = document.createElement("div");
+        name.className = "probability-item-name rarity-eternal";
+        name.textContent = "eternal key • per box";
+
+        const chance = document.createElement("div");
+        chance.className = "probability-item-chance";
+        chance.textContent = formatProbability(keyChance * 100);
+        card.append(image, name, chance);
+        grid.appendChild(card);
+    }
+
+    const variantWeights = getVariantWeights(variantMult, 2 / 3, boxType);
+    const totalVariantWeight = variantWeights.reduce((sum, variant) => sum + variant.weight, 0);
+    const variantsSection = document.createElement("section");
+    variantsSection.className = "probability-variants";
+
+    const variantsTitle = document.createElement("div");
+    variantsTitle.className = "probability-variants-title";
+    variantsTitle.textContent = "whole-box variant chance";
+
+    const variantsList = document.createElement("div");
+    variantsList.className = "probability-variants-list";
+
+    for (const entry of variantWeights) {
+        const variant = document.createElement("div");
+        variant.className = "probability-variant";
+
+        const variantName = document.createElement("div");
+        variantName.className = `probability-variant-name ${entry.variant.name}`;
+        variantName.textContent = entry.variant.name;
+
+        const variantChance = document.createElement("div");
+        variantChance.className = "probability-variant-chance";
+        variantChance.textContent = formatProbability(entry.weight / totalVariantWeight * 100);
+        variant.append(variantName, variantChance);
+        variantsList.appendChild(variant);
+    }
+
+    variantsSection.append(variantsTitle, variantsList);
+    grid.appendChild(variantsSection);
+
+    modal.append(header, grid);
+    backdrop.appendChild(modal);
+    backdrop.addEventListener("pointerdown", event => {
+        if (event.target === backdrop) closeProbabilityModal();
+    });
+    document.body.appendChild(backdrop);
+    close.focus();
+}
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        closeProbabilityModal();
+        closeShelfPicker();
+        closeVariantPicker();
+        closeShelfView();
+    }
+});
+
+function getBoxPosition() {
+    const rect = stage.getBoundingClientRect();
+    const boxSize = 245;
+    return { x: rect.width / 2 - boxSize / 2, y: rect.height * .60 - boxSize / 2 };
+}
+
+/* ==================================================
+   shop purchase & state control
+================================================== */
+
+function updateShopButtonsState() {
+    const canBuyNow = !activeBox || nextPrompt.classList.contains("visible");
+
+    shopButtons.forEach(button => {
+        const price = Number(button.dataset.price);
+        const keyPrice = Number(button.dataset.keyPrice || 0);
+        button.disabled = !canBuyNow || balance < price || eternalKeys < keyPrice;
+    });
+}
+
+function purchaseAndSpawn(boxType, price, keyPrice, luck, variantMult, minItems, maxItems) {
+    const canBuyNow = !activeBox || nextPrompt.classList.contains("visible");
+    if (!canBuyNow) return;
+    if (balance < price || eternalKeys < keyPrice) return;
+
+    balance -= price;
+    eternalKeys -= keyPrice;
+    updateBalanceDisplay();
+    updateEternalKeysDisplay();
+
+    const startSpawn = () => {
+        spawnBox(boxType, luck, variantMult, minItems, maxItems);
+    };
+
+    if (activeBox || activeItems.length > 0) {
+        clearSceneImmediate(startSpawn);
+    } else {
+        startSpawn();
+    }
+}
+
+shopButtons.forEach(button => {
+    button.addEventListener("click", event => {
+        event.stopPropagation();
+        startMusic();
+
+        const price = Number(button.dataset.price);
+        purchaseAndSpawn(
+            button.dataset.box,
+            price,
+            Number(button.dataset.keyPrice || 0),
+            Number(button.dataset.luck),
+            Number(button.dataset.variantMult || 1),
+            Number(button.dataset.minItems || 1),
+            Number(button.dataset.maxItems || 3)
+        );
+    });
+});
+
+document.querySelectorAll(".shop-box-preview").forEach(preview => {
+    preview.addEventListener("click", event => {
+        event.stopPropagation();
+        const entry = preview.closest(".shop-entry");
+        const button = entry?.querySelector(".shop-buy");
+        if (entry && button) openProbabilityModal(button, entry);
+    });
+});
+
+function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
+    opening = true;
+    clearing = false;
+    isEntering = true;
+    currentBoxType = boxType;
+    currentLuck = luck;
+    currentVariantMult = variantMult;
+    currentMinItems = minItems;
+    currentMaxItems = maxItems;
+
+    // Roll box-wide variant (at 2/3 standard variant chance)
+    currentBoxVariant = rollVariant(variantMult, 2 / 3, boxType);
+
+    hideNextPrompt();
+
+    const box = document.createElement("div");
+    box.className = "box entering";
+
+    if (currentBoxVariant.name !== "normal") {
+        box.classList.add(currentBoxVariant.name);
+    }
+
+    const image = document.createElement("img");
+    image.src = `boxes/${boxType}/boxclosed.png`;
+    box.appendChild(image);
+    box.style.setProperty("--rainbow-mask", `url("${image.src}")`);
+
+    const pos = getBoxPosition();
+    box.style.left = `${pos.x}px`;
+    box.style.top = `${pos.y}px`;
+    stage.appendChild(box);
+
+    activeBox = box;
+    updateShopButtonsState();
+    playSound(wooshSound, .25, random(.94, 1.04));
+    setTimeout(() => {
+        isEntering = false;
+    }, 820);
+}
+
+function openBox() {
+    if (!activeBox || !opening || clearing || isEntering || isOpeningAnimation) return;
+    opening = false;
+    isOpeningAnimation = true;
+
+    activeBox.classList.remove("entering");
+    activeBox.classList.add("shaking");
+    playSound(openSound, .85, getPitch());
+
+    setTimeout(() => {
+        if (!activeBox) {
+            isOpeningAnimation = false;
+            return;
+        }
+        activeBox.classList.remove("shaking");
+        const image = activeBox.querySelector("img");
+        image.src = `boxes/${currentBoxType}/boxopened.png`;
+        activeBox.style.setProperty("--rainbow-mask", `url("${image.src}")`);
+        activeBox.classList.add("opening");
+        setTimeout(spawnRewards, 130);
+    }, 520);
+}
+
+function getRewardPositions(count, boxCenterX, boxTop) {
+    const itemSize = 108;
+    const columnGap = 14;
+    const rowGap = 34;
+    const perRow = 5;
+    const firstRowY = boxTop - 38 - itemSize;
+    const positions = [];
+
+    for (let i = 0; i < count; i++) {
+        const row = Math.floor(i / perRow);
+        const indexInRow = i % perRow;
+        const itemsInRow = Math.min(perRow, count - row * perRow);
+        const rowWidth = itemsInRow * itemSize + (itemsInRow - 1) * columnGap;
+        const startX = boxCenterX - rowWidth / 2;
+
+        positions.push({
+            x: startX + indexInRow * (itemSize + columnGap),
+            y: firstRowY - row * (itemSize + rowGap)
+        });
+    }
+
+    return positions;
+}
+
+/* ==================================================
+   spawn rewards & exact variant set matching
+================================================== */
+
+function spawnRewards() {
+    if (!activeBox) {
+        isOpeningAnimation = false;
+        return;
+    }
+    isRewardAnimation = true;
+
+    const itemAmount = randomInt(currentMinItems, currentMaxItems);
+    const gotEternalKey = Math.random() < (ETERNAL_KEY_CHANCES[currentBoxType] || 0);
+    statistics.boxesOpened += 1;
+    statistics.itemsPulled += itemAmount;
+    if (gotEternalKey) statistics.keysFound += 1;
+    const amount = itemAmount + (gotEternalKey ? 1 : 0);
+    const stageRect = stage.getBoundingClientRect();
+    const boxRect = activeBox.getBoundingClientRect();
+    const boxLeft = boxRect.left - stageRect.left;
+    let boxTop = boxRect.top - stageRect.top;
+    const boxCenterX = boxLeft + boxRect.width / 2;
+    let positions = getRewardPositions(amount, boxCenterX, boxTop);
+
+    // Keep tall reward stacks inside the stage. Only move the composition when
+    // the rolled amount would clip its highest row, preserving normal layouts.
+    const topmostRewardY = Math.min(...positions.map(position => position.y));
+    const topSafeArea = 24;
+    const compositionShift = Math.max(0, topSafeArea - topmostRewardY);
+
+    if (compositionShift > 0) {
+        const currentBoxTop = Number.parseFloat(activeBox.style.top) || boxTop;
+        activeBox.style.top = `${currentBoxTop + compositionShift}px`;
+        boxTop += compositionShift;
+        positions = getRewardPositions(amount, boxCenterX, boxTop);
+    }
+
+    const isBoxVariantLocked = currentBoxVariant && currentBoxVariant.name !== "normal";
+
+    const rolled = [];
+    const pendingSecretReveals = [];
+    let maxValueInBox = 0;
+
+    for (let i = 0; i < itemAmount; i++) {
+        const itemData = weightedItem(currentLuck, currentBoxType);
+        const variant = isBoxVariantLocked ? currentBoxVariant : rollVariant(currentVariantMult, 1, currentBoxType);
+        if (variant.name !== "normal") statistics.variantsPulled += 1;
+        recordPullStatistics(itemData, variant);
+        const totalVal = Math.round(itemData.value * variant.multiplier);
+        if (totalVal > maxValueInBox) {
+            maxValueInBox = totalVal;
+        }
+
+        rolled.push({
+            itemData,
+            variant,
+            pos: null,
+            isEternalKey: false
+        });
+    }
+    saveStatistics();
+
+    if (gotEternalKey) {
+        rolled.push({
+            itemData: { name: "eternal key", rarity: "eternal", value: 0, image: "items/eternalkey.png" },
+            variant: VARIANTS[0],
+            pos: null,
+            isEternalKey: true
+        });
+    }
+
+    rolled.forEach((reward, index) => reward.pos = positions[index]);
+
+    const counts = {};
+    rolled.forEach(r => {
+        if (!r.isEternalKey) {
+            const fullId = `${r.variant.name}_${r.itemData.name}`;
+            counts[fullId] = (counts[fullId] || 0) + 1;
+        }
+    });
+
+    const rewardPromises = rolled.map((r, i) => new Promise(resolve => {
+        setTimeout(() => {
+            const fullId = `${r.variant.name}_${r.itemData.name}`;
+            const matchCount = counts[fullId];
+
+            let setMultiplier = 1;
+            let badgeAsset = null;
+
+            if (!r.isEternalKey && matchCount > 3) {
+                setMultiplier = 4;
+                badgeAsset = "assets/morethan3.png";
+            } else if (!r.isEternalKey && matchCount === 3) {
+                setMultiplier = 3;
+                badgeAsset = "assets/3ofakind.png";
+            } else if (!r.isEternalKey && matchCount === 2) {
+                setMultiplier = 1.5;
+                badgeAsset = "assets/2ofakind.png";
+            }
+
+            const mouthX = boxCenterX - 54;
+            const mouthY = boxTop + boxRect.height * .30 - 54;
+            spawnItem(r.pos.x, r.pos.y, mouthX, mouthY, r.itemData, r.variant, setMultiplier, badgeAsset, r.isEternalKey, pendingSecretReveals)
+                .then(resolve);
+        }, i * 135);
+    }));
+
+    const normalizedQuality = Math.min(1, Math.log10(Math.max(10, maxValueInBox)) / 5);
+    const completionPitch = 0.95 + (normalizedQuality * 0.7);
+
+    Promise.all(rewardPromises).then(async () => {
+        // Every item lands first; mysteries then reveal one at a time.
+        for (const mystery of pendingSecretReveals) {
+            if (mystery.type === "fuwuds") {
+                await queueFuwudsReveal(mystery.image, mystery.revealSource);
+            } else {
+                await queueShadowReveal(mystery.image, mystery.revealSource);
+            }
+            addMoney(mystery.reward, mystery.x, mystery.y);
+        }
+
+        playSound(completeSound, .8, completionPitch);
+        setTimeout(() => {
+            showNextPrompt();
+            isOpeningAnimation = false;
+            isRewardAnimation = false;
+        }, 420);
+    });
+}
+
+function spawnItem(targetX, targetY, sourceX, sourceY, itemData, variant, setMultiplier, badgeAsset, isEternalKey = false, pendingSecretReveals = []) {
+    const item = document.createElement("div");
+    item.className = "item revealing";
+
+    if (itemData.rarity === "secret" && itemData.revealImage) {
+        item.classList.add("secret-unrevealed");
+    } else if (itemData.rarity === "fuwuds" && itemData.revealImage) {
+        item.classList.add("fuwuds-unrevealed");
+    }
+
+    if (variant.name !== "normal") {
+        item.classList.add(variant.name);
+    }
+
+    const image = document.createElement("img");
+    image.className = "item-image";
+    image.src = itemData.image;
+    item.appendChild(image);
+    item.style.setProperty("--rainbow-mask", `url("${image.src}")`);
+
+    // Pastel Rarity Info Label
+    const info = document.createElement("div");
+    info.className = `item-info rarity-${itemData.rarity}`;
+    const prefix = variant.name !== "normal" ? `${variant.name} ` : "";
+    info.textContent = `${prefix}${itemData.name}`;
+    applyItemNameColours(info, itemData);
+    item.appendChild(info);
+
+    // Set Match Badge
+    if (badgeAsset) {
+        const badge = document.createElement("img");
+        badge.className = "match-badge";
+        badge.src = badgeAsset;
+        item.appendChild(badge);
+    }
+
+    item.style.left = `${targetX}px`;
+    item.style.top = `${targetY}px`;
+    stage.appendChild(item);
+
+    const baseReward = Math.round(itemData.value * variant.multiplier);
+    const finalReward = Math.round(baseReward * setMultiplier);
+
+    const physics = {
+        x: targetX, y: targetY,
+        targetX, targetY,
+        vx: random(-.7, .7), vy: random(-1.1, -.35),
+        rotation: random(-4, 4),
+        rotationVelocity: random(-.18, .18),
+        reward: finalReward,
+        emerging: true
+    };
+
+    activeItems.push({ element: item, physics });
+    const emerge = item.animate([
+        {
+            opacity: 0,
+            transform: `translate3d(${sourceX - targetX}px, ${sourceY - targetY + 28}px, 0) rotate(-8deg) scale(.28)`
+        },
+        {
+            opacity: 1,
+            transform: `translate3d(${(sourceX - targetX) * .35}px, ${(sourceY - targetY) * .24 - 22}px, 0) rotate(5deg) scale(1.07)`,
+            offset: .7
+        },
+        {
+            opacity: 1,
+            transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)"
+        }
+    ], {
+        duration: 650,
+        easing: "cubic-bezier(.18,.78,.22,1)",
+        fill: "forwards"
+    });
+
+    return new Promise(resolve => {
+        emerge.onfinish = async () => {
+            if (!item.isConnected) {
+                resolve();
+                return;
+            }
+
+            item.classList.remove("revealing");
+            emerge.cancel();
+            physics.emerging = false;
+            markItemDiscovered(itemData.name);
+            if (!isEternalKey) markVariantDiscovered(itemData.name, variant.name);
+
+            if (isEternalKey) {
+                eternalKeys += 1;
+                updateEternalKeysDisplay();
+            } else if (itemData.rarity === "secret" && itemData.revealImage) {
+                pendingSecretReveals.push({
+                    type: "secret",
+                    image,
+                    revealSource: itemData.revealImage,
+                    reward: finalReward,
+                    x: targetX + 54,
+                    y: targetY + 5
+                });
+            } else if (itemData.rarity === "fuwuds" && itemData.revealImage) {
+                pendingSecretReveals.push({
+                    type: "fuwuds",
+                    image,
+                    revealSource: itemData.revealImage,
+                    reward: finalReward,
+                    x: targetX + 54,
+                    y: targetY + 5
+                });
+            } else {
+                addMoney(finalReward, targetX + 54, targetY + 5);
+            }
+
+            resolve();
+        };
+    });
+}
+
+/* ==================================================
+   physics & pointer
+================================================== */
+
+stage.addEventListener("pointermove", event => {
+    const rect = stage.getBoundingClientRect();
+    mouseX = event.clientX - rect.left;
+    mouseY = event.clientY - rect.top;
+});
+
+function updateItems() {
+    for (const entry of activeItems) {
+        const { element, physics } = entry;
+        if (!element.isConnected) continue;
+        if (physics.emerging) continue;
+
+        const width = element.offsetWidth;
+        const height = element.offsetHeight;
+        const centerX = physics.x + width / 2;
+        const centerY = physics.y + height / 2;
+
+        const dx = centerX - mouseX;
+        const dy = centerY - mouseY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 125 && distance > 0) {
+            const strength = 1 - distance / 125;
+            physics.vx += (dx / distance) * strength * .055;
+            physics.vy += (dy / distance) * strength * .055;
+        }
+
+        physics.vx += (physics.targetX - physics.x) * .012;
+        physics.vy += (physics.targetY - physics.y) * .012;
+        physics.vx *= .915;
+        physics.vy *= .915;
+
+        physics.x += physics.vx;
+        physics.y += physics.vy;
+
+        physics.rotationVelocity *= .93;
+        physics.rotation += physics.rotationVelocity;
+
+        element.style.transform = `translate3d(
+            ${physics.x - physics.targetX}px,
+            ${physics.y - physics.targetY}px,
+            0
+        ) rotate(${physics.rotation}deg)`;
+    }
+    requestAnimationFrame(updateItems);
+}
+requestAnimationFrame(updateItems);
+
+/* ==================================================
+   scene controls
+================================================== */
+
+function showNextPrompt() {
+    if (!activeBox || clearing) return;
+    nextPrompt.classList.add("visible");
+    updateShopButtonsState();
+}
+
+function hideNextPrompt() {
+    nextPrompt.classList.remove("visible");
+    updateShopButtonsState();
+}
+
+function clearSceneImmediate(callback) {
+    if (activeBox) activeBox.remove();
+    for (const entry of activeItems) entry.element.remove();
+
+    activeBox = null;
+    activeItems = [];
+    clearing = false;
+    isOpeningAnimation = false;
+    isRewardAnimation = false;
+    isEntering = false;
+    hideNextPrompt();
+
+    if (callback) callback();
+}
+
+function clearScene(buyNext = false) {
+    if (clearing) return;
+
+    let repeatButton = null;
+    let repeatPrice = 0;
+    let repeatKeyPrice = 0;
+
+    if (buyNext) {
+        repeatButton = Array.from(document.querySelectorAll(".shop-buy"))
+            .find(button => button.dataset.box === currentBoxType);
+        repeatPrice = repeatButton ? Number(repeatButton.dataset.price) : 0;
+        repeatKeyPrice = repeatButton ? Number(repeatButton.dataset.keyPrice || 0) : 0;
+
+        // Keep the finished screen and shop available when this box
+        // cannot be afforded again (especially a spent eternal box).
+        if (!repeatButton || balance < repeatPrice || eternalKeys < repeatKeyPrice) {
+            updateShopButtonsState();
+            return;
+        }
+    }
+
+    clearing = true;
+    hideNextPrompt();
+
+    if (activeBox) {
+        activeBox.classList.add("clearing");
+        playSound(wooshSound, .25, random(.94, 1.04));
+    }
+
+    for (const entry of activeItems) {
+        entry.element.classList.add("fading");
+    }
+
+    setTimeout(() => {
+        if (activeBox) activeBox.remove();
+        for (const entry of activeItems) entry.element.remove();
+        activeBox = null;
+        activeItems = [];
+        clearing = false;
+
+        if (buyNext) {
+            balance -= repeatPrice;
+            eternalKeys -= repeatKeyPrice;
+            updateBalanceDisplay();
+            updateEternalKeysDisplay();
+            spawnBox(currentBoxType, currentLuck, currentVariantMult, currentMinItems, currentMaxItems);
+        } else {
+            updateShopButtonsState();
+        }
+    }, 680);
+}
+
+stage.addEventListener("click", event => {
+    if (event.target.closest("#next-prompt")) {
+        if (!clearing && !isOpeningAnimation && !isRewardAnimation && !isEntering && activeBox) {
+            clearScene(true);
+        }
+        return;
+    }
+
+    if (activeBox && opening && !clearing && !isEntering) {
+        openBox();
+        return;
+    }
+
+    if (activeBox && !opening && !clearing && !isOpeningAnimation && !isRewardAnimation) {
+        clearScene(true);
+        return;
+    }
+});
+
+window.addEventListener("resize", () => {
+    if (!activeBox || activeBox.classList.contains("clearing")) return;
+    const pos = getBoxPosition();
+    activeBox.style.left = `${pos.x}px`;
+    activeBox.style.top = `${pos.y}px`;
+});
+
+// Initial check
+updateShopButtonsState();
+updateEternalKeysDisplay();
+
+</script>
+</body>
+</html>
