@@ -1767,6 +1767,19 @@ body.reduced-effects .shelf-display-item {
                     <button class="shop-buy" data-box="larpbox" data-price="1500000" data-luck="1" data-variant-mult="11" data-min-items="4" data-max-items="8">open</button>
                 </div>
 
+                <!-- mega box: combined standard and larp loot pools -->
+                <div class="shop-entry">
+                    <img class="shop-box-preview" src="boxes/megabox/boxclosed.png">
+                    <div class="shop-entry-info">
+                        <div class="shop-name">mega box</div>
+                        <div class="shop-price">
+                            <img class="shop-money" src="assets/money.png">
+                            5,000,000
+                        </div>
+                    </div>
+                    <button class="shop-buy" data-box="megabox" data-price="5000000" data-luck="25" data-variant-mult="12" data-min-items="6" data-max-items="18">open</button>
+                </div>
+
                 <!-- eternal box -->
                 <div class="shop-entry">
                     <img class="shop-box-preview" src="boxes/eternalbox/boxclosed.png">
@@ -2153,6 +2166,7 @@ const ETERNAL_KEY_CHANCES = {
     portal: .21,
     container: .25,
     luckyblock: .30,
+    megabox: .45,
     eternalbox: .35
 };
 
@@ -2860,9 +2874,11 @@ function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
 ================================================== */
 
 function getItemWeights(luck = 1, boxType = null) {
-    const itemPool = boxType === "larpbox"
-        ? ITEMS.filter(item => item.pool === "larpbox")
-        : ITEMS.filter(item => !item.pool);
+    const itemPool = boxType === "megabox"
+        ? ITEMS
+        : boxType === "larpbox"
+            ? ITEMS.filter(item => item.pool === "larpbox")
+            : ITEMS.filter(item => !item.pool);
 
     // Early boxes keep their original gentle curve. Beyond supply-crate luck,
     // rarity weights scale meaningfully so expensive boxes are real upgrades.
