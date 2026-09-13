@@ -444,8 +444,8 @@ body.reduced-effects .shelf-display-item {
 
 .box {
     position: absolute;
-    width: 245px;
-    height: 245px;
+    width: 294px;
+    height: 294px;
     z-index: 5;
     cursor: pointer;
     transform-origin: 50% 78%;
@@ -1629,7 +1629,7 @@ body.reduced-effects .shelf-display-item {
     .shop-price { font-size: 11px; }
     .balance { font-size: 13px; }
     .settings-button { right: 6px; bottom: 9px; width: 34px; height: 34px; }
-    .box { width: 195px; height: 195px; }
+    .box { width: 234px; height: 234px; }
     .item { width: 82px; height: 82px; }
     .match-badge { width: 40px; height: 40px; top: -10px; right: -10px; }
     .probability-backdrop { padding: 12px; }
@@ -3470,7 +3470,7 @@ document.addEventListener("keydown", event => {
 
 function getBoxPosition() {
     const rect = stage.getBoundingClientRect();
-    const boxSize = 245;
+    const boxSize = window.matchMedia("(max-width: 700px)").matches ? 234 : 294;
     return { x: rect.width / 2 - boxSize / 2, y: rect.height * .60 - boxSize / 2 };
 }
 
@@ -3623,6 +3623,23 @@ function getRewardPositions(count, boxCenterX, boxTop) {
     return positions;
 }
 
+function shiftRewardComposition(delta) {
+    if (!delta || !activeBox) return;
+
+    const boxTop = Number.parseFloat(activeBox.style.top) || 0;
+    activeBox.style.transition = "top .42s cubic-bezier(.22,.78,.25,1)";
+    activeBox.style.top = `${boxTop + delta}px`;
+
+    for (const activeItem of activeItems) {
+        const { element, physics } = activeItem;
+        const itemTop = Number.parseFloat(element.style.top) || physics.y;
+        element.style.transition = "top .42s cubic-bezier(.22,.78,.25,1)";
+        element.style.top = `${itemTop + delta}px`;
+        physics.y += delta;
+        physics.targetY += delta;
+    }
+}
+
 /* ==================================================
    spawn rewards & exact variant set matching
 ================================================== */
@@ -3643,9 +3660,9 @@ function spawnRewards() {
     const stageRect = stage.getBoundingClientRect();
     const boxRect = activeBox.getBoundingClientRect();
     const boxLeft = boxRect.left - stageRect.left;
-    let boxTop = boxRect.top - stageRect.top;
+    const boxTop = boxRect.top - stageRect.top;
     const boxCenterX = boxLeft + boxRect.width / 2;
-    let positions = getRewardPositions(amount, boxCenterX, boxTop);
+    const positions = getRewardPositions(amount, boxCenterX, boxTop);
 
     // Keep tall reward stacks inside the stage. Only move the composition when
     // the rolled amount would clip its highest row, preserving normal layouts.
@@ -3653,12 +3670,8 @@ function spawnRewards() {
     const topSafeArea = 24;
     const compositionShift = Math.max(0, topSafeArea - topmostRewardY);
 
-    if (compositionShift > 0) {
-        const currentBoxTop = Number.parseFloat(activeBox.style.top) || boxTop;
-        activeBox.style.top = `${currentBoxTop + compositionShift}px`;
-        boxTop += compositionShift;
-        positions = getRewardPositions(amount, boxCenterX, boxTop);
-    }
+    const rewardRowCount = Math.ceil(amount / 5);
+    let appliedCompositionShift = 0;
 
     const isBoxVariantLocked = currentBoxVariant && currentBoxVariant.name !== "normal";
 
@@ -3706,6 +3719,16 @@ function spawnRewards() {
 
     const rewardPromises = rolled.map((r, i) => new Promise(resolve => {
         setTimeout(() => {
+            const row = Math.floor(i / 5);
+            const targetCompositionShift = rewardRowCount > 1
+                ? compositionShift * (row / (rewardRowCount - 1))
+                : compositionShift;
+            const shiftDelta = targetCompositionShift - appliedCompositionShift;
+            if (shiftDelta > 0) {
+                shiftRewardComposition(shiftDelta);
+                appliedCompositionShift = targetCompositionShift;
+            }
+
             const fullId = `${r.variant.name}_${r.itemData.name}`;
             const matchCount = counts[fullId];
 
@@ -3724,8 +3747,8 @@ function spawnRewards() {
             }
 
             const mouthX = boxCenterX - 54;
-            const mouthY = boxTop + boxRect.height * .30 - 54;
-            spawnItem(r.pos.x, r.pos.y, mouthX, mouthY, r.itemData, r.variant, setMultiplier, badgeAsset, r.isEternalKey, pendingSecretReveals)
+            const mouthY = boxTop + appliedCompositionShift + boxRect.height * .30 - 54;
+            spawnItem(r.pos.x, r.pos.y + appliedCompositionShift, mouthX, mouthY, r.itemData, r.variant, setMultiplier, badgeAsset, r.isEternalKey, pendingSecretReveals)
                 .then(resolve);
         }, i * 135);
     }));
