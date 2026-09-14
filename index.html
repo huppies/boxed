@@ -2955,6 +2955,8 @@ let opening = false;
 let clearing = false;
 
 let currentBoxType = null;
+let currentBaseLuck = 1;
+let currentBaseVariantMult = 1;
 let currentLuck = 1;
 let currentVariantMult = 1;
 let currentMinItems = 1;
@@ -3917,6 +3919,8 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
     clearing = false;
     isEntering = true;
     currentBoxType = boxType;
+    currentBaseLuck = luck;
+    currentBaseVariantMult = variantMult;
     const streakStrength = advanceBoxOpeningStreak(boxType);
     const streakLuckMultiplier = 1 + streakStrength * .0025;
     const streakAnimationMultiplier = 1 - streakStrength * .003;
@@ -3928,7 +3932,7 @@ function spawnBox(boxType, luck, variantMult = 1, minItems = 1, maxItems = 3) {
     currentMaxItems = maxItems;
 
     // Roll box-wide variant (at 2/3 standard variant chance)
-    currentBoxVariant = rollVariant(variantMult, 2 / 3, boxType);
+    currentBoxVariant = rollVariant(currentVariantMult, 2 / 3, boxType);
 
     hideNextPrompt();
 
@@ -4453,7 +4457,9 @@ function clearScene(buyNext = false) {
             eternalKeys -= repeatKeyPrice;
             updateBalanceDisplay();
             updateEternalKeysDisplay();
-            spawnBox(currentBoxType, currentLuck, currentVariantMult, currentMinItems, currentMaxItems);
+            // Rebuild every repeat from the shop's original stats. Passing the
+            // already modified values here would compound streak/modifier luck.
+            spawnBox(currentBoxType, currentBaseLuck, currentBaseVariantMult, currentMinItems, currentMaxItems);
         } else {
             updateShopButtonsState();
         }
